@@ -1,6 +1,7 @@
 /**
  * TRISULA COMMAND CENTER (TCC) v1.2 - LocalStorage & JSON Backup Engine
  * File: js/storage.js
+ * Engine: TRISULACODER v10.2
  */
 
 const StorageEngine = {
@@ -19,15 +20,30 @@ const StorageEngine = {
             globalVariables: ["TCC_STORAGE_V12", "sidebarCollapsed", "currentTab"]
         },
         fileTree: [
-            { id: "f1", fileName: "index.html", path: "index.html", status: "Safe & Tested", prerequisites: [] },
-            { id: "f2", fileName: "styles.css", path: "css/styles.css", status: "Safe & Tested", prerequisites: ["f1"] },
-            { id: "f3", fileName: "app.js", path: "js/app.js", status: "Safe & Tested", prerequisites: ["f1", "f2"] },
-            { id: "f4", fileName: "storage.js", path: "js/storage.js", status: "Safe & Tested", prerequisites: ["f3"] },
-            { id: "f5", fileName: "navigation.js", path: "js/navigation.js", status: "Safe & Tested", prerequisites: ["f4"] }
+            { id: "f1", fileName: "kasir.js", path: "modules/kasir.js", status: "Safe & Tested", prerequisites: [] },
+            { id: "f2", fileName: "laporanHutang.js", path: "modules/laporanHutang.js", status: "Safe & Tested", prerequisites: ["f1"] },
+            { id: "f3", fileName: "dataPelanggan.js", path: "modules/dataPelanggan.js", status: "Safe & Tested", prerequisites: ["f2"] },
+            { id: "f4", fileName: "dataSupplier.js", path: "modules/dataSupplier.js", status: "Error/Need Fix", prerequisites: [] },
+            { id: "f5", fileName: "dataStokBarang.js", path: "modules/dataStokBarang.js", status: "Safe & Tested", prerequisites: ["f4"] }
         ],
+        // Default preset nodes matching user flow diagram specification
+        flowAuditor: {
+            nodes: [
+                { id: "n1", fileId: "f1", label: "kasir", subtext: "Jika pelanggan berhutang", x: 60, y: 50 },
+                { id: "n2", fileId: "f2", label: "Laporan hutang/piutang", subtext: "", x: 420, y: 50 },
+                { id: "n3", fileId: "f3", label: "Data Pelanggan", subtext: "", x: 420, y: 180 },
+                { id: "n4", fileId: "f4", label: "Data Supplier", subtext: "", x: 650, y: 180 },
+                { id: "n5", fileId: "f5", label: "Data Stok Barang", subtext: "Jika ada barang masuk dari supplier dan jika toko berhutang ke supplier", x: 60, y: 320 }
+            ],
+            connections: [
+                { from: "n1", to: "n2" },
+                { from: "n2", to: "n3" },
+                { from: "n5", to: "n4" }
+            ]
+        },
         codeVault: [],
         errorLogs: [],
-        activeTab: "dashboard"
+        activeTab: "flow-auditor"
     },
 
     /**
