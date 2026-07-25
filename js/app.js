@@ -118,7 +118,49 @@ function showConfirmModal(title, message, onConfirm) {
 }
 
 /**
- * Inisialisasi Aplikasi saat DOM selesai dimuat
+ * Inisialisasi Event Listener untuk Upload & Inspector Kode Otomatis
+ */
+function initCodeInspectorBindings() {
+    const uploadBtn = document.getElementById('btn-trigger-upload');
+    const fileInput = document.getElementById('inspector-file-input');
+    const dropZone = document.getElementById('inspector-dropzone');
+    const runAnalysisBtn = document.getElementById('btn-run-code-inspection');
+
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0 && window.CodeInspectorModule) {
+                window.CodeInspectorModule.handleFilesUploaded(e.target.files);
+            }
+        });
+    }
+
+    if (dropZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0 && window.CodeInspectorModule) {
+                window.CodeInspectorModule.handleFilesUploaded(files);
+            }
+        });
+    }
+
+    if (runAnalysisBtn && window.CodeInspectorModule) {
+        runAnalysisBtn.addEventListener('click', () => {
+            window.CodeInspectorModule.runCrossAnalysis();
+        });
+    }
+}
+
+/**
+ * Inisialisasi Utama saat DOM Selesai Dimuat
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Expose fungsi-fungsi utama ke global window
@@ -140,6 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.NavigationController) {
         window.NavigationController.init();
     }
+
+    // Inisialisasi Bindings Upload & Inspector
+    initCodeInspectorBindings();
 
     // Bind Event Sidebar Toggle Button
     const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
