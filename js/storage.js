@@ -2,6 +2,7 @@
  * TRISULA COMMAND CENTER (TCC) v1.2 - LocalStorage & JSON Backup Engine
  * File: js/storage.js
  * Engine: TRISULACODER v10.2
+ * Status: Phase 4 Fully Integrated Engine (Zero Feature Loss)
  */
 
 const StorageEngine = {
@@ -40,6 +41,12 @@ const StorageEngine = {
                 { from: "n2", to: "n3" },
                 { from: "n5", to: "n4" }
             ]
+        },
+        // Store uploaded files & static code inspection logs
+        codeInspector: {
+            uploadedFiles: [],
+            extractedFunctions: [],
+            desyncLogs: []
         },
         codeVault: [],
         errorLogs: [],
@@ -86,6 +93,24 @@ const StorageEngine = {
         } catch (e) {
             console.error('[TCC StorageEngine Save Error]:', e);
             return false;
+        }
+    },
+
+    /**
+     * Menyimpan hasil analisis inspeksi kode otomatis ke LocalStorage
+     */
+    saveCodeAnalysisResult(inspectionResults) {
+        try {
+            const data = this.getData();
+            data.codeInspector = {
+                uploadedFiles: inspectionResults.uploadedFiles || [],
+                extractedFunctions: inspectionResults.extractedFunctions || [],
+                desyncLogs: inspectionResults.desyncLogs || []
+            };
+            this.saveData(data);
+            console.log('[TCC StorageEngine]: Saved Code Analysis Results.');
+        } catch (e) {
+            console.error('[TCC StorageEngine CodeAnalysis Error]:', e);
         }
     },
 
