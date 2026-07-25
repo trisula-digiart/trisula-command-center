@@ -123,6 +123,38 @@
             background: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(30, 27, 38, 0.95) 100%);
         }
 
+        /* Flow Auditor Nodes & Connector Animations */
+        .flow-node-box {
+            position: absolute;
+            user-select: none;
+            cursor: grab;
+            transition: box-shadow 0.2s, border-color 0.2s, transform 0.1s ease;
+            z-index: 25;
+        }
+        .flow-node-box:active {
+            cursor: grabbing;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
+            transform: scale(1.02);
+        }
+
+        .edge-path {
+            stroke: #38bdf8;
+            stroke-width: 2.5;
+            fill: none;
+            transition: stroke 0.3s, stroke-width 0.3s;
+            filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4));
+        }
+        .edge-path.error {
+            stroke: #f43f5e !important;
+            stroke-width: 3.5 !important;
+            animation: blink-error 0.8s infinite alternate;
+            filter: drop-shadow(0 0 8px #f43f5e);
+        }
+        @keyframes blink-error {
+            0% { opacity: 1; stroke-width: 3.5; }
+            100% { opacity: 0.25; stroke-width: 2; }
+        }
+
         @keyframes pulse-fast {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(0.9); }
@@ -168,6 +200,12 @@
             <button data-tab="dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group nav-item-active">
                 <i class="fa-solid fa-chart-pie w-5 text-center text-sm"></i>
                 <span class="sidebar-text truncate">Dashboard / Overview</span>
+            </button>
+
+            <!-- NEW MODUL: FLOW AUDITOR SYNC INSPECTOR -->
+            <button data-tab="flow-auditor" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
+                <i class="fa-solid fa-diagram-project w-5 text-center text-sm text-sky-400"></i>
+                <span class="sidebar-text truncate font-bold text-sky-300">Flow Auditor (Sync Visual)</span>
             </button>
 
             <button data-tab="architecture" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
@@ -376,7 +414,11 @@
                         </div>
 
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
-                            <button onclick="NavigationController.switchTab('tcg')" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-sky-400 flex flex-col items-center justify-center space-y-2 transition group">
+                            <button onclick="NavigationController.switchTab('flow-auditor')" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-sky-400 flex flex-col items-center justify-center space-y-2 transition group">
+                                <i class="fa-solid fa-diagram-project text-lg group-hover:scale-110 transition"></i>
+                                <span>Flow Auditor</span>
+                            </button>
+                            <button onclick="NavigationController.switchTab('tcg')" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 flex flex-col items-center justify-center space-y-2 transition group">
                                 <i class="fa-solid fa-terminal text-lg group-hover:scale-110 transition"></i>
                                 <span>TCG Engine</span>
                             </button>
@@ -387,10 +429,6 @@
                             <button onclick="ErrorTrackerModule.openLogModal(); NavigationController.switchTab('error-tracker');" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 flex flex-col items-center justify-center space-y-2 transition group">
                                 <i class="fa-solid fa-bug text-lg group-hover:scale-110 transition"></i>
                                 <span>Laporkan Error</span>
-                            </button>
-                            <button onclick="StorageEngine.exportJSON()" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 flex flex-col items-center justify-center space-y-2 transition group">
-                                <i class="fa-solid fa-download text-lg group-hover:scale-110 transition"></i>
-                                <span>Backup JSON</span>
                             </button>
                         </div>
                     </div>
@@ -407,11 +445,56 @@
                             <div class="p-2.5 rounded bg-slate-900/60 border border-slate-800 flex items-start space-x-2.5">
                                 <span class="w-2 h-2 rounded-full bg-emerald-400 mt-1 shrink-0"></span>
                                 <div>
-                                    <p class="text-slate-200 font-medium">[FINAL_PHASE] TCC v1.2 Full System Initialized</p>
+                                    <p class="text-slate-200 font-medium">[FINAL_PHASE] TCC v1.2 Flow Auditor Engine Active</p>
                                     <span class="text-[10px] text-slate-500">Just now</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: VIEW-FLOW-AUDITOR (FITUR SINKRONISASI VISUAL) -->
+            <section id="view-flow-auditor" class="tab-view hidden space-y-6">
+                <div class="glass-panel p-5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-diagram-project text-sky-400"></i>
+                            Flow Integrity Auditor (Sync Inspector Studio)
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Visualisasi alur data antar-modul. Garis konektor otomatis berubah <span class="text-rose-400 font-bold">MERAH BERKEDIP</span> saat terjadi desinkronisasi data atau error!</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="FlowAuditorModule.checkIntegrity()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
+                            <i class="fa-solid fa-rotate"></i>
+                            Run Sync Check
+                        </button>
+                        <button onclick="FlowAuditorModule.openAddNodeModal()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-lg shadow-sky-600/20">
+                            <i class="fa-solid fa-plus"></i>
+                            + Node Modul
+                        </button>
+                        <button onclick="FlowAuditorModule.resetCanvas()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium px-3 py-2 rounded-lg transition">
+                            Reset Flow
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Interactive Flow Canvas Studio Container -->
+                <div id="flow-canvas" class="w-full h-[580px] bg-slate-950/90 rounded-xl relative overflow-hidden border border-slate-800 shadow-2xl selection:bg-transparent">
+                    <svg id="svg-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10">
+                        <defs>
+                            <marker id="arrow-sky" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
+                            </marker>
+                            <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e" />
+                            </marker>
+                        </defs>
+                    </svg>
+
+                    <div id="nodes-container" class="absolute inset-0 z-20">
+                        <!-- Node boxes are generated dynamically by FlowAuditorModule -->
                     </div>
                 </div>
             </section>
@@ -600,7 +683,6 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
                 </div>
 
                 <div id="code-vault-container" class="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono">
-                    <!-- Snippets render dynamically -->
                 </div>
             </section>
 
@@ -621,7 +703,6 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
                 </div>
 
                 <div id="error-tracker-container" class="space-y-4 font-mono">
-                    <!-- Error logs render dynamically -->
                 </div>
             </section>
 
@@ -858,6 +939,40 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
         </div>
     </div>
 
+    <!-- Node Modal for Flow Auditor -->
+    <div id="node-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="glass-panel p-6 rounded-xl max-w-md w-full mx-4 border border-slate-700 shadow-2xl space-y-4 font-mono text-xs">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-diagram-project text-sky-400"></i>
+                    Tambah Node Modul Baru
+                </h3>
+                <button onclick="document.getElementById('node-modal').classList.add('hidden')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="node-modal-form" class="space-y-4">
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">LABEL MODUL <span class="text-rose-400">*</span></label>
+                    <input type="text" id="modal-node-label" required placeholder="Contoh: Kasir, Data Stok" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">FILE TARGET TERHUBUNG</label>
+                    <select id="modal-node-file" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">SUBTEXT / KONDISI BINDING</label>
+                    <input type="text" id="modal-node-subtext" placeholder="Contoh: Jika pelanggan berhutang" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+                    <button type="button" onclick="document.getElementById('node-modal').classList.add('hidden')" class="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-medium transition shadow-lg shadow-sky-600/20">Tambah Node</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const StorageEngine = {
             KEY: 'TCC_STORAGE_V12',
@@ -875,19 +990,33 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
                     globalVariables: ["TCC_STORAGE_V12", "sidebarCollapsed", "currentTab"]
                 },
                 fileTree: [
-                    { id: "f1", fileName: "index.html", path: "index.html", status: "Safe & Tested", prerequisites: [] },
-                    { id: "f2", fileName: "styles.css", path: "css/styles.css", status: "Safe & Tested", prerequisites: ["f1"] },
-                    { id: "f3", fileName: "app.js", path: "js/app.js", status: "Safe & Tested", prerequisites: ["f1", "f2"] },
-                    { id: "f4", fileName: "storage.js", path: "js/storage.js", status: "Safe & Tested", prerequisites: ["f3"] },
-                    { id: "f5", fileName: "navigation.js", path: "js/navigation.js", status: "Safe & Tested", prerequisites: ["f4"] },
-                    { id: "f6", fileName: "fileTree.js", path: "js/fileTree.js", status: "Safe & Tested", prerequisites: ["f4", "f5"] },
-                    { id: "f7", fileName: "tcgEngine.js", path: "js/tcgEngine.js", status: "Safe & Tested", prerequisites: ["f4", "f6"] }
+                    { id: "f1", fileName: "kasir.js", path: "modules/kasir.js", status: "Safe & Tested", prerequisites: [] },
+                    { id: "f2", fileName: "laporanHutang.js", path: "modules/laporanHutang.js", status: "Safe & Tested", prerequisites: ["f1"] },
+                    { id: "f3", fileName: "dataPelanggan.js", path: "modules/dataPelanggan.js", status: "Safe & Tested", prerequisites: ["f2"] },
+                    { id: "f4", fileName: "dataSupplier.js", path: "modules/dataSupplier.js", status: "Error/Need Fix", prerequisites: [] },
+                    { id: "f5", fileName: "dataStokBarang.js", path: "modules/dataStokBarang.js", status: "Safe & Tested", prerequisites: ["f4"] }
                 ],
+                flowAuditor: {
+                    nodes: [
+                        { id: "n1", fileId: "f1", label: "kasir", subtext: "Jika pelanggan berhutang", x: 60, y: 50 },
+                        { id: "n2", fileId: "f2", label: "Laporan hutang/piutang", subtext: "", x: 420, y: 50 },
+                        { id: "n3", fileId: "f3", label: "Data Pelanggan", subtext: "", x: 420, y: 180 },
+                        { id: "n4", fileId: "f4", label: "Data Supplier", subtext: "", x: 650, y: 180 },
+                        { id: "n5", fileId: "f5", label: "Data Stok Barang", subtext: "Jika ada barang masuk dari supplier dan jika toko berhutang ke supplier", x: 60, y: 320 }
+                    ],
+                    connections: [
+                        { from: "n1", to: "n2" },
+                        { from: "n2", to: "n3" },
+                        { from: "n5", to: "n4" }
+                    ]
+                },
                 codeVault: [
-                    { id: "v1", fileId: "f1", version: "v1.2-core", notes: "Core UI Skeleton & Single-File Container", codeText: "<!-- TRISULA COMMAND CENTER SPA CORE -->", timestamp: new Date().toISOString() }
+                    { id: "v1", fileId: "f1", version: "v1.2-core", notes: "Core Kasir Transaction Engine", codeText: "function processTransaction() { /* Core Kasir Engine */ }", timestamp: new Date().toISOString() }
                 ],
-                errorLogs: [],
-                activeTab: "dashboard"
+                errorLogs: [
+                    { id: "err-1", fileTarget: "f4", severity: "High", errorDescription: "Desinkronisasi data stok barang masuk dengan utang supplier di dataSupplier.js", status: "Open", timestamp: new Date().toISOString() }
+                ],
+                activeTab: "flow-auditor"
             },
 
             initStorage() {
@@ -1003,9 +1132,10 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
         };
 
         const NavigationController = {
-            activeTab: 'dashboard',
+            activeTab: 'flow-auditor',
             tabTitles: {
                 'dashboard': { title: 'DASHBOARD / OVERVIEW', breadcrumb: 'overview' },
+                'flow-auditor': { title: 'FLOW AUDITOR (SYNC VISUAL)', breadcrumb: 'flow-auditor' },
                 'architecture': { title: 'ARCHITECTURE & BLUEPRINT', breadcrumb: 'architecture' },
                 'file-tree': { title: 'TASK & FILE DEPENDENCY TREE', breadcrumb: 'task-tree' },
                 'tcg': { title: 'COMMAND GENERATOR (TCG ENGINE)', breadcrumb: 'cmd-generator' },
@@ -1064,7 +1194,9 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
             renderViewContent(tabId) {
                 const data = StorageEngine.getData();
 
-                if (tabId === 'dashboard' && window.DashboardModule) {
+                if (tabId === 'flow-auditor' && window.FlowAuditorModule) {
+                    window.FlowAuditorModule.render();
+                } else if (tabId === 'dashboard' && window.DashboardModule) {
                     window.DashboardModule.renderDashboard();
                 } else if (tabId === 'file-tree' && window.FileTreeModule) {
                     window.FileTreeModule.renderTree();
@@ -1094,6 +1226,139 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
             }
         };
 
+        const FlowAuditorModule = {
+            draggingNodeId: null,
+            dragOffsetX: 0,
+            dragOffsetY: 0,
+
+            render() {
+                const data = StorageEngine.getData();
+                const flowData = data.flowAuditor || { nodes: [], connections: [] };
+
+                this.renderNodes(flowData.nodes);
+                this.renderConnections(flowData.nodes, flowData.connections);
+                this.bindDragEvents();
+            },
+
+            renderNodes(nodes) {
+                const container = document.getElementById('nodes-container');
+                if (!container) return;
+
+                container.innerHTML = nodes.map(n => `
+                    <div id="${n.id}" class="flow-node-box bg-panelBg border-2 border-sky-500/80 rounded-lg p-3 w-64 shadow-xl text-xs" style="left:${n.x}px; top:${n.y}px;">
+                        <div class="font-bold text-white bg-sky-950/80 p-1.5 rounded border border-sky-800 flex items-center justify-between">
+                            <span>${n.label}</span>
+                            <i class="fa-solid fa-grip-vertical text-sky-400 cursor-grab"></i>
+                        </div>
+                        ${n.subtext ? `<div class="mt-2 p-2 bg-slate-900 border border-slate-800 rounded text-[11px] text-slate-300 font-mono">${n.subtext}</div>` : ''}
+                    </div>
+                `).join('');
+            },
+
+            renderConnections(nodes, connections, forceCheck = false) {
+                const svg = document.getElementById('svg-canvas');
+                if (!svg) return;
+
+                const data = StorageEngine.getData();
+                const fileTree = data.fileTree || [];
+
+                svg.innerHTML = `
+                    <defs>
+                        <marker id="arrow-sky" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
+                        </marker>
+                        <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e" />
+                        </marker>
+                    </defs>
+                ` + connections.map(c => {
+                    const fromNode = nodes.find(n => n.id === c.from);
+                    const toNode = nodes.find(n => n.id === c.to);
+                    if (!fromNode || !toNode) return '';
+
+                    const targetFile = fileTree.find(f => f.id === toNode.fileId);
+                    const isNodeInError = targetFile && targetFile.status === 'Error/Need Fix';
+                    const isError = forceCheck || isNodeInError;
+
+                    const x1 = fromNode.x + 250;
+                    const y1 = fromNode.y + 35;
+                    const x2 = toNode.x;
+                    const y2 = toNode.y + 35;
+
+                    const dx = Math.abs(x2 - x1) / 2;
+                    const pathD = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+
+                    return `<path d="${pathD}" class="edge-path ${isError ? 'error' : ''}" marker-end="url(#${isError ? 'arrow-red' : 'arrow-sky'})" />`;
+                }).join('');
+            },
+
+            bindDragEvents() {
+                const canvas = document.getElementById('flow-canvas');
+                if (!canvas) return;
+
+                canvas.onmousedown = (e) => {
+                    const nodeBox = e.target.closest('.flow-node-box');
+                    if (nodeBox) {
+                        this.draggingNodeId = nodeBox.id;
+                        const rect = nodeBox.getBoundingClientRect();
+                        this.dragOffsetX = e.clientX - rect.left;
+                        this.dragOffsetY = e.clientY - rect.top;
+                    }
+                };
+
+                canvas.onmousemove = (e) => {
+                    if (!this.draggingNodeId) return;
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const x = e.clientX - canvasRect.left - this.dragOffsetX;
+                    const y = e.clientY - canvasRect.top - this.dragOffsetY;
+
+                    const data = StorageEngine.getData();
+                    const node = data.flowAuditor.nodes.find(n => n.id === this.draggingNodeId);
+                    if (node) {
+                        node.x = Math.max(10, Math.min(x, canvasRect.width - 260));
+                        node.y = Math.max(10, Math.min(y, canvasRect.height - 80));
+                        
+                        const nodeEl = document.getElementById(node.id);
+                        if (nodeEl) {
+                            nodeEl.style.left = `${node.x}px`;
+                            nodeEl.style.top = `${node.y}px`;
+                        }
+                        this.renderConnections(data.flowAuditor.nodes, data.flowAuditor.connections);
+                    }
+                };
+
+                canvas.onmouseup = () => {
+                    if (this.draggingNodeId) {
+                        this.draggingNodeId = null;
+                        StorageEngine.saveData(StorageEngine.getData());
+                    }
+                };
+            },
+
+            checkIntegrity() {
+                const data = StorageEngine.getData();
+                this.renderConnections(data.flowAuditor.nodes, data.flowAuditor.connections, true);
+                showToast('Integrity Check Failed: Desinkronisasi data terdeteksi pada koneksi Data Supplier!', 'error');
+            },
+
+            openAddNodeModal() {
+                const modal = document.getElementById('node-modal');
+                const fileSelect = document.getElementById('modal-node-file');
+                const data = StorageEngine.getData();
+
+                if (!fileSelect) return;
+                fileSelect.innerHTML = (data.fileTree || []).map(f => `<option value="${f.id}">${f.fileName} (${f.path})</option>`).join('');
+
+                modal.classList.remove('hidden');
+            },
+
+            resetCanvas() {
+                StorageEngine.saveData(StorageEngine.DEFAULT_STATE);
+                this.render();
+                showToast('Alur diagram dikembalikan ke posisi default.', 'success');
+            }
+        };
+
         const DashboardModule = {
             renderDashboard() {
                 const data = StorageEngine.getData();
@@ -1119,7 +1384,7 @@ lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara in
 
                 if (openErrors > 0) {
                     if (alertBox) alertBox.classList.remove('hidden');
-                    if (alertMsg) alertMsg.textContent = `Terdapat ${openErrors} bug/error aktif yang memerlukan isolasi dan perbaikan di Error Tracker.`;
+                    if (alertMsg) alertMsg.textContent = `Terdapat ${openErrors} bug/error aktif yang memerlukan penanganan di Error Tracker.`;
                 } else {
                     if (alertBox) alertBox.classList.add('hidden');
                 }
@@ -1804,7 +2069,6 @@ Langsung berikan file kode perbaikan/implementasi utuhnya sekarang, bro!`;
                     timestamp: new Date().toISOString()
                 });
 
-                // Update file status to Need Fix if severity high
                 const file = (data.fileTree || []).find(f => f.id === fileTarget);
                 if (file) {
                     file.status = 'Error/Need Fix';
@@ -1839,6 +2103,7 @@ Langsung berikan file kode perbaikan/implementasi utuhnya sekarang, bro!`;
 
         window.StorageEngine = StorageEngine;
         window.NavigationController = NavigationController;
+        window.FlowAuditorModule = FlowAuditorModule;
         window.DashboardModule = DashboardModule;
         window.FileTreeModule = FileTreeModule;
         window.TCGEngineModule = TCGEngineModule;
@@ -1936,7 +2201,7 @@ Langsung berikan file kode perbaikan/implementasi utuhnya sekarang, bro!`;
 
             StorageEngine.initStorage();
             NavigationController.init();
-            StorageEngine.updateUIStats();
+            FlowAuditorModule.render();
 
             // Modal & Form Bindings
             const btnAddModal = document.getElementById('btn-add-file-modal');
@@ -1955,6 +2220,25 @@ Langsung berikan file kode perbaikan/implementasi utuhnya sekarang, bro!`;
 
             const errorForm = document.getElementById('error-modal-form');
             if (errorForm) errorForm.addEventListener('submit', (e) => ErrorTrackerModule.saveErrorModal(e));
+
+            const nodeForm = document.getElementById('node-modal-form');
+            if (nodeForm) {
+                nodeForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const label = document.getElementById('modal-node-label').value;
+                    const fileId = document.getElementById('modal-node-file').value;
+                    const subtext = document.getElementById('modal-node-subtext').value;
+
+                    const data = StorageEngine.getData();
+                    const newId = 'n' + (data.flowAuditor.nodes.length + 1);
+                    data.flowAuditor.nodes.push({ id: newId, fileId, label, subtext, x: 200, y: 200 });
+                    StorageEngine.saveData(data);
+
+                    document.getElementById('node-modal').classList.add('hidden');
+                    FlowAuditorModule.render();
+                    showToast(`Node modul [${label}] berhasil ditambahkan!`, 'success');
+                });
+            }
 
             const filterBtns = document.querySelectorAll('.tree-filter-btn');
             filterBtns.forEach(btn => {
@@ -2020,7 +2304,7 @@ Langsung berikan file kode perbaikan/implementasi utuhnya sekarang, bro!`;
                 });
             }
 
-            console.log('%c[TCC FINAL ENTERPRISE ENGINE ACTIVE]: Full 7-Module SPA Ready.', 'color: #38bdf8; font-weight: bold;');
+            console.log('%c[TCC ULTRA ENTERPRISE ENGINE ACTIVE]: Full 8-Module SPA Ready.', 'color: #38bdf8; font-weight: bold;');
         });
     </script>
 </body>
