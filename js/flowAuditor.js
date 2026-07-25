@@ -37,12 +37,12 @@ const FlowAuditorModule = {
         if (!container) return;
 
         container.innerHTML = nodes.map(n => `
-            <div id="${n.id}" class="flow-node-box bg-panelBg border-2 border-sky-500/80 rounded-lg p-3 w-64 shadow-xl text-xs" style="left:${n.x}px; top:${n.y}px;">
+            <div id="${n.id}" class="flow-node-box bg-panelBg border-2 border-sky-500/80 rounded-lg p-3 w-64 shadow-xl text-xs select-none absolute" style="left:${n.x}px; top:${n.y}px;">
                 <div class="font-bold text-white bg-sky-950/80 p-1.5 rounded border border-sky-800 flex items-center justify-between">
-                    <span>${n.label}</span>
+                    <span class="truncate mr-2">${n.label}</span>
                     <i class="fa-solid fa-grip-vertical text-sky-400 cursor-grab"></i>
                 </div>
-                ${n.subtext ? `<div class="mt-2 p-2 bg-slate-900 border border-slate-800 rounded text-[11px] text-slate-300 font-mono">${n.subtext}</div>` : ''}
+                ${n.subtext ? `<div class="mt-2 p-2 bg-slate-900 border border-slate-800 rounded text-[11px] text-slate-300 font-mono leading-relaxed">${n.subtext}</div>` : ''}
             </div>
         `).join('');
     },
@@ -59,6 +59,7 @@ const FlowAuditorModule = {
 
         const data = window.StorageEngine ? window.StorageEngine.getData() : {};
         const fileTree = data.fileTree || [];
+        const codeInspector = data.codeInspector || { desyncLogs: [] };
 
         let svgContent = `
             <defs>
@@ -76,10 +77,17 @@ const FlowAuditorModule = {
             const toNode = nodes.find(n => n.id === c.to);
             if (!fromNode || !toNode) return '';
 
-            // Cek apakah file target berhubungan dengan error
+            // Cek apakah file target berhubungan dengan status Error/Need Fix di fileTree
             const targetFile = fileTree.find(f => f.id === toNode.fileId);
             const isNodeInError = targetFile && targetFile.status === 'Error/Need Fix';
-            const isError = forceCheck || isNodeInError;
+
+            // Cek apakah ada desync log dari codeInspector untuk file dari/ke connection ini
+            const hasDesync = codeInspector.desyncLogs && codeInspector.desyncLogs.some(log => {
+                const targetName = targetFile ? targetFile.fileName : '';
+                return log.fileTarget === toNode.fileId || (targetName && log.description.includes(targetName));
+            });
+
+            const isError = forceCheck || isNodeInError || hasDesync;
 
             // Titik Awal (Kanan Node Asal) & Titik Akhir (Kiri Node Tujuan)
             const x1 = fromNode.x + 250;
@@ -154,7 +162,7 @@ const FlowAuditorModule = {
         this.renderConnections(data.flowAuditor.nodes, data.flowAuditor.connections, true);
         
         if (typeof window.showToast === 'function') {
-            window.showToast('Integrity Check Failed: Desinkronisasi data terdeteksi pada koneksi Data Supplier!', 'error');
+            window.showToast('Integrity Check Triggered: Jalur desinkronisasi terdeteksi!', 'error');
         }
     },
 
@@ -180,7 +188,9 @@ const FlowAuditorModule = {
      */
     resetCanvas() {
         if (!window.StorageEngine) return;
-        window.StorageEngine.saveData(window.StorageEngine.DEFAULT_STATE);
+        const data = window.StorageEngine.getData();
+        data.flowAuditor = JSON.parse(JSON.stringify(window.StorageEngine.DEFAULT_STATE.flowAuditor));
+        window.StorageEngine.saveData(data);
         this.render();
         
         if (typeof window.showToast === 'function') {
