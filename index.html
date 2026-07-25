@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRISULA COMMAND CENTER (TCC) v1.2 - FINAL ENTERPRISE</title>
+    
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome v6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cyberBg: '#090d16',
+                        panelBg: '#111827',
+                        panelBorder: '#1e293b',
+                        accentSky: '#38bdf8',
+                        accentDark: '#0284c7',
+                        iceCyan: '#7dd3fc',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+        
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.8);
+        }
+        
+        .glass-panel-interactive {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-panel-interactive:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+        }
+
+        .nav-item-active {
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border-left: 3px solid #38bdf8;
+        }
+
+        .glow-sky {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+        }
+
+        .glow-rose {
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
+        }
+
+        /* Status Badge Utilities */
+        .status-badge-not-started {
+            background-color: rgba(51, 65, 85, 0.6);
+            color: #cbd5e1;
+            border: 1px solid #475569;
+        }
+        .status-badge-drafted {
+            background-color: rgba(120, 53, 15, 0.6);
+            color: #fcd34d;
+            border: 1px solid #b45309;
+        }
+        .status-badge-safe {
+            background-color: rgba(6, 78, 59, 0.6);
+            color: #34d399;
+            border: 1px solid #047857;
+        }
+        .status-badge-error {
+            background-color: rgba(136, 19, 55, 0.6);
+            color: #fca5a5;
+            border: 1px solid #be123c;
+        }
+
+        /* Dependency Card Styling */
+        .dependency-card {
+            background: rgba(17, 24, 39, 0.85);
+            border: 1px solid rgba(30, 41, 59, 0.9);
+            transition: all 0.25s ease-in-out;
+        }
+        .dependency-card:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 4px 20px rgba(9, 13, 22, 0.6);
+        }
+
+        /* Card Locked Visuals */
+        .card-locked {
+            border-color: rgba(225, 29, 72, 0.3) !important;
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(30, 27, 38, 0.95) 100%);
+        }
+
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.9); }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+    </style>
+</head>
+<body class="bg-cyberBg text-slate-200 font-sans h-screen flex overflow-hidden antialiased selection:bg-sky-500 selection:text-white">
+
+    <aside id="sidebar" class="w-64 bg-panelBg/95 border-r border-panelBorder flex flex-col transition-all duration-300 ease-in-out relative z-30 shrink-0">
+        <div class="h-16 flex items-center justify-between px-4 border-b border-panelBorder">
+            <div class="flex items-center space-x-3 overflow-hidden">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-400 flex items-center justify-center shrink-0 shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid fa-shield-halved text-white text-lg"></i>
+                </div>
+                <div class="sidebar-text flex flex-col transition-opacity duration-200">
+                    <span class="font-bold text-sm tracking-wider text-white">TRISULA <span class="text-accentSky">TCC</span></span>
+                    <span class="text-[10px] text-slate-400 font-mono">v1.2 ENTERPRISE</span>
+                </div>
+            </div>
+            <button id="toggle-sidebar-btn" onclick="toggleSidebar()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition" title="Toggle Sidebar">
+                <i id="toggle-icon" class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+        </div>
+
+        <div class="px-4 py-3 border-b border-panelBorder/60 bg-slate-900/40 sidebar-text">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">STORAGE ENGINE</span>
+                <span id="storage-status-badge" class="flex items-center text-[10px] text-emerald-400 font-mono font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-fast mr-1.5"></span>
+                    READY
+                </span>
+            </div>
+            <div class="text-xs font-semibold text-slate-200 mt-1 font-mono flex items-center justify-between">
+                <span>TCC_STORAGE_V12</span>
+                <span id="sidebar-storage-size" class="text-sky-400 text-[10px]">0 KB</span>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-3 space-y-1 px-2" id="sidebar-nav">
+            <button data-tab="dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group nav-item-active">
+                <i class="fa-solid fa-chart-pie w-5 text-center text-sm"></i>
+                <span class="sidebar-text truncate">Dashboard / Overview</span>
+            </button>
+
+            <button data-tab="architecture" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
+                <i class="fa-solid fa-compass-drafting w-5 text-center text-sm"></i>
+                <span class="sidebar-text truncate">Architecture & Blueprint</span>
+            </button>
+
+            <button data-tab="file-tree" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
+                <i class="fa-solid fa-sitemap w-5 text-center text-sm"></i>
+                <span class="sidebar-text truncate">Task & File Dependency Tree</span>
+            </button>
+
+            <button data-tab="tcg" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
+                <i class="fa-solid fa-terminal w-5 text-center text-sm"></i>
+                <span class="sidebar-text truncate">Command Generator (TCG)</span>
+            </button>
+
+            <button data-tab="code-vault" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
+                <i class="fa-solid fa-box-archive w-5 text-center text-sm"></i>
+                <span class="sidebar-text truncate">Code Vault & Revision</span>
+            </button>
+
+            <button data-tab="error-tracker" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
+                <i class="fa-solid fa-bug w-5 text-center text-sm"></i>
+                <span class="sidebar-text truncate">Error Tracker</span>
+            </button>
+
+            <button data-tab="backup-settings" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition group">
+                <i class="fa-solid fa-sliders w-5 text-center text-sm"></i>
+                <span class="sidebar-text truncate">Backup & Settings</span>
+            </button>
+        </nav>
+
+        <div class="p-3 border-t border-panelBorder bg-slate-900/30 sidebar-text">
+            <div class="glass-panel p-2.5 rounded-lg text-[11px] flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-database text-sky-400"></i>
+                    <span class="text-slate-300 font-mono">LOCALSTORAGE</span>
+                </div>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800/50">ACTIVE</span>
+            </div>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-cyberBg">
+        <header class="h-16 border-b border-panelBorder bg-panelBg/80 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-20">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-sky-400">
+                    <i class="fa-solid fa-wave-square text-sm"></i>
+                </div>
+                <div>
+                    <h1 id="page-title" class="text-sm font-bold text-white tracking-wide">DASHBOARD / OVERVIEW</h1>
+                    <p class="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+                        <span>system</span> <span class="text-slate-600">/</span> <span class="text-sky-400" id="page-breadcrumb">overview</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="hidden lg:flex items-center space-x-3 bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-1.5 font-mono text-xs">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-slate-500">STATE:</span>
+                        <span class="text-emerald-400 font-bold" id="header-state-size">SYNCED</span>
+                    </div>
+                    <span class="text-slate-700">|</span>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-slate-500">FILES:</span>
+                        <span class="text-sky-400 font-bold" id="header-file-count">0</span>
+                    </div>
+                    <span class="text-slate-700">|</span>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-slate-500">ERRORS:</span>
+                        <span class="text-rose-400 font-bold" id="header-error-count">0</span>
+                    </div>
+                </div>
+
+                <div class="font-mono text-xs text-slate-300 bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                    <i class="fa-regular fa-clock text-sky-400"></i>
+                    <span id="live-clock">00:00:00 UTC</span>
+                </div>
+
+                <div class="flex items-center space-x-3 pl-2 border-l border-slate-800">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 p-0.5 flex items-center justify-center shadow-md">
+                        <div class="w-full h-full bg-slate-900 rounded-[7px] flex items-center justify-center">
+                            <i class="fa-solid fa-user-gear text-sky-400 text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="hidden sm:block text-left">
+                        <div class="text-xs font-semibold text-slate-200" id="owner-name-display">Lead Architect</div>
+                        <div class="text-[10px] text-emerald-400 font-mono" id="project-ver-display">v1.2 Enterprise</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+
+            <!-- TAB 1: VIEW-DASHBOARD -->
+            <section id="view-dashboard" class="tab-view hidden space-y-6">
+                <!-- Overall Progress Indicator Banner -->
+                <div class="glass-panel p-5 rounded-xl border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-sky-400"></i>
+                                Overall Project Health & Completion Progress
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Rasio berkas teruji [Safe & Tested] terhadap total berkas terdaftar.</p>
+                        </div>
+                        <span id="dash-progress-text" class="text-base font-bold font-mono text-emerald-400">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                        <div id="dash-progress-bar" class="bg-gradient-to-r from-sky-500 to-emerald-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-panel glass-panel-interactive p-4 rounded-xl relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400">PROJECT CORE</p>
+                                <h3 class="text-lg font-bold text-white mt-1 truncate" id="dash-project-name">Trisula Command Center</h3>
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400">
+                                <i class="fa-solid fa-microchip text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-xs text-emerald-400 space-x-1">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span id="dash-version-tag">Version 1.2 Enterprise</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel glass-panel-interactive p-4 rounded-xl relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400">TRACKED FILES</p>
+                                <h3 class="text-xl font-bold text-white mt-1" id="dash-file-count">0 File</h3>
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                                <i class="fa-solid fa-folder-tree text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-xs text-sky-400 space-x-1">
+                            <i class="fa-solid fa-check-double text-xs"></i>
+                            <span id="dash-safe-file-sub">0 Safe & Tested</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel glass-panel-interactive p-4 rounded-xl relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400">CODE VAULT</p>
+                                <h3 class="text-xl font-bold text-white mt-1" id="dash-vault-count">0 Snippet</h3>
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                                <i class="fa-solid fa-box-archive text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-xs text-cyan-300 space-x-1">
+                            <i class="fa-solid fa-shield-halved text-xs"></i>
+                            <span>Safe & Revision Ready</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel glass-panel-interactive p-4 rounded-xl relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-mono text-slate-400">STORAGE USAGE</p>
+                                <h3 class="text-xl font-bold text-emerald-400 mt-1" id="dash-storage-size">0 KB</h3>
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                <i class="fa-solid fa-database text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-xs text-slate-400 space-x-1 font-mono">
+                            <span>Key: TCC_STORAGE_V12</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Errors Alert Bar (Dynamically Highlighted) -->
+                <div id="dash-error-alert" class="hidden p-4 rounded-xl bg-rose-950/50 border border-rose-800/80 flex items-center justify-between text-xs font-mono text-rose-200">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-lg animate-pulse"></i>
+                        <div>
+                            <span class="font-bold text-white uppercase block">BUG / RUNTIME ERROR DETECTED</span>
+                            <span id="dash-error-alert-msg">Terdapat error aktif yang memerlukan penanganan di Error Tracker.</span>
+                        </div>
+                    </div>
+                    <button onclick="NavigationController.switchTab('error-tracker')" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold transition">
+                        Buka Error Tracker
+                    </button>
+                </div>
+
+                <!-- Quick Actions & Telemetry Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 glass-panel p-5 rounded-xl space-y-4">
+                        <div class="flex items-center justify-between border-b border-panelBorder pb-3">
+                            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-amber-400"></i>
+                                Quick Action Shortcuts
+                            </h2>
+                            <span class="text-xs font-mono text-sky-400">EXPRESS ROUTE</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
+                            <button onclick="NavigationController.switchTab('tcg')" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-sky-400 flex flex-col items-center justify-center space-y-2 transition group">
+                                <i class="fa-solid fa-terminal text-lg group-hover:scale-110 transition"></i>
+                                <span>TCG Engine</span>
+                            </button>
+                            <button onclick="FileTreeModule.openAddModal(); NavigationController.switchTab('file-tree');" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-emerald-400 flex flex-col items-center justify-center space-y-2 transition group">
+                                <i class="fa-solid fa-plus text-lg group-hover:scale-110 transition"></i>
+                                <span>Tambah Berkas</span>
+                            </button>
+                            <button onclick="ErrorTrackerModule.openLogModal(); NavigationController.switchTab('error-tracker');" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 flex flex-col items-center justify-center space-y-2 transition group">
+                                <i class="fa-solid fa-bug text-lg group-hover:scale-110 transition"></i>
+                                <span>Laporkan Error</span>
+                            </button>
+                            <button onclick="StorageEngine.exportJSON()" class="p-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 flex flex-col items-center justify-center space-y-2 transition group">
+                                <i class="fa-solid fa-download text-lg group-hover:scale-110 transition"></i>
+                                <span>Backup JSON</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-xl space-y-4">
+                        <div class="flex items-center justify-between border-b border-panelBorder pb-3">
+                            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-sky-400"></i>
+                                Storage Log Activity
+                            </h2>
+                            <span class="text-[10px] font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded">REALTIME</span>
+                        </div>
+                        <div class="space-y-3 font-mono text-xs" id="dash-activity-log">
+                            <div class="p-2.5 rounded bg-slate-900/60 border border-slate-800 flex items-start space-x-2.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 mt-1 shrink-0"></span>
+                                <div>
+                                    <p class="text-slate-200 font-medium">[FINAL_PHASE] TCC v1.2 Full System Initialized</p>
+                                    <span class="text-[10px] text-slate-500">Just now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: VIEW-ARCHITECTURE -->
+            <section id="view-architecture" class="tab-view hidden space-y-6">
+                <div class="glass-panel p-6 rounded-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-panelBorder pb-3">
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-compass-drafting text-sky-400"></i>
+                            Tech Stack Ledger & System Blueprint
+                        </h2>
+                        <span class="text-xs font-mono text-sky-400">ARCHITECTURE ENGINE v1.2</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="architecture-blueprint-content">
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: VIEW-FILE-TREE -->
+            <section id="view-file-tree" class="tab-view hidden space-y-6">
+                <div class="glass-panel p-5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-sitemap text-sky-400"></i>
+                            Interactive File Dependency Tree & State Machine
+                        </h2>
+                        <p class="text-xs text-slate-400">Kelola status berkas, proteksi dependensi prasyarat (*Prerequisite Lock*), dan hirarki proyek.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex items-center space-x-1 bg-slate-900/80 border border-slate-800 p-1 rounded-lg text-xs font-mono">
+                            <button class="tree-filter-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition bg-slate-800 text-sky-400 font-semibold" data-filter="ALL">ALL</button>
+                            <button class="tree-filter-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-filter="LOCKED"><i class="fa-solid fa-lock text-[10px] mr-1"></i>LOCKED</button>
+                            <button class="tree-filter-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-filter="SAFE">SAFE</button>
+                            <button class="tree-filter-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-filter="ERROR">ERROR</button>
+                        </div>
+
+                        <button id="btn-add-file-modal" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition flex items-center gap-2 shadow-lg shadow-sky-600/20">
+                            <i class="fa-solid fa-plus"></i>
+                            Tambah Berkas
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
+                    <div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 flex items-center justify-between">
+                        <span class="text-xs text-slate-400">TOTAL FILES</span>
+                        <span id="tree-stat-total" class="text-sm font-bold text-white">0</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-800/40 flex items-center justify-between">
+                        <span class="text-xs text-emerald-400">SAFE & TESTED</span>
+                        <span id="tree-stat-safe" class="text-sm font-bold text-emerald-300">0</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-800/40 flex items-center justify-between">
+                        <span class="text-xs text-amber-400">PREREQ LOCKED</span>
+                        <span id="tree-stat-locked" class="text-sm font-bold text-amber-300">0</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-800/40 flex items-center justify-between">
+                        <span class="text-xs text-rose-400">NEED FIX</span>
+                        <span id="tree-stat-error" class="text-sm font-bold text-rose-300">0</span>
+                    </div>
+                </div>
+
+                <div id="file-tree-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                </div>
+            </section>
+
+            <!-- TAB 4: VIEW-TCG -->
+            <section id="view-tcg" class="tab-view hidden space-y-6">
+                <div class="glass-panel p-5 rounded-xl flex items-center justify-between">
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-sky-400"></i>
+                            Trisula Command Generator (TCG Engine v6.1)
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Racik prompt pemulihan, fitur baru, dan refactoring otomatis berbasis konteks dependensi file.</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded text-xs font-mono font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800/60 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        SYNTHESIS ENGINE READY
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-5 glass-panel p-5 rounded-xl space-y-4 font-mono text-xs">
+                        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                            <h3 class="font-bold text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-sky-400"></i>
+                                PROMPT CONFIGURATION
+                            </h3>
+                            <span class="text-[10px] text-slate-500 uppercase">Input Studio</span>
+                        </div>
+
+                        <form id="tcg-config-form" class="space-y-4">
+                            <div>
+                                <label class="block text-slate-400 mb-1.5 font-semibold">1. TARGET FILE <span class="text-rose-400">*</span></label>
+                                <select id="tcg-file-select" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400 transition">
+                                    <option value="">-- Pilih Berkas Target --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-400 mb-1.5 font-semibold">2. EXECUTION MODE <span class="text-rose-400">*</span></label>
+                                <select id="tcg-mode-select" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400 transition">
+                                    <option value="NEW_FEATURE">🚀 Master Prompt Feature Execution</option>
+                                    <option value="ERROR_FIX">🐛 Error Recovery & Bug Isolation</option>
+                                    <option value="REFACTOR">⚡ Code Refactor & Optimization</option>
+                                    <option value="UNIT_TEST">🛡️ Unit Testing & QA Audit Generator</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-400 mb-1.5 font-semibold">3. CUSTOM INSTRUCTIONS / RECOVERY LOG</label>
+                                <textarea id="tcg-custom-instructions" rows="4" placeholder="Contoh: 'Tambahkan enkripsi password dengan bcrypt' atau 'Perbaiki CORS error pada fungsi fetchToken()'" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400 transition placeholder:text-slate-600 resize-none"></textarea>
+                            </div>
+
+                            <div class="space-y-2 pt-1 border-t border-slate-800/80">
+                                <label class="block text-slate-400 mb-1 font-semibold">CONTEXT INCLUSIONS</label>
+                                <label class="flex items-center space-x-2 text-slate-300 cursor-pointer hover:text-white transition">
+                                    <input type="checkbox" id="tcg-check-blueprint" checked class="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-sky-500">
+                                    <span>Include System Blueprint Specs</span>
+                                </label>
+                                <label class="flex items-center space-x-2 text-slate-300 cursor-pointer hover:text-white transition">
+                                    <input type="checkbox" id="tcg-check-prereqs" checked class="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-sky-500">
+                                    <span>Include Prerequisites Dependency List</span>
+                                </label>
+                            </div>
+
+                            <div class="pt-2">
+                                <button type="submit" id="btn-synthesize-prompt" class="w-full bg-gradient-to-r from-sky-600 to-accentDark hover:from-sky-500 hover:to-sky-600 text-white font-bold py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/25">
+                                    <i class="fa-solid fa-bolt text-amber-300"></i>
+                                    Synthesize Command Prompt
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-7 glass-panel p-5 rounded-xl flex flex-col space-y-3 font-mono">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                                <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                                <span class="text-xs font-bold text-slate-300 ml-2">PROMPT_CONSOLE_OUTPUT.md</span>
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                <button id="btn-copy-tcg" class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-md shadow-sky-600/20">
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span id="btn-copy-tcg-text">Copy to Clipboard</span>
+                                </button>
+                                <button id="btn-clear-tcg" class="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs px-2.5 py-1.5 rounded-lg transition" title="Clear Console">
+                                    <i class="fa-solid fa-eraser"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 bg-slate-950/90 border border-slate-800 rounded-lg p-4 overflow-x-auto min-h-[380px] relative">
+                            <pre id="tcg-output-preview" class="text-xs text-emerald-400 font-mono whitespace-pre-wrap leading-relaxed">
+/* TRISULA COMMAND GENERATOR (TCG) v6.1 OUTPUT CONSOLE */
+/* Solusi otomatis pembuat Master Prompt & Error Recovery System */
+
+Pilih file target pada form konfigurasi di sebelah kiri, tentukan mode eksekusi,
+lalu klik "Synthesize Command Prompt" untuk meracik prompt terstruktur secara instan!
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: VIEW-CODE-VAULT -->
+            <section id="view-code-vault" class="tab-view hidden space-y-6">
+                <div class="glass-panel p-5 rounded-xl flex items-center justify-between">
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-box-archive text-sky-400"></i>
+                            Code Vault & Revision Store
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Penyimpanan snippet kode stabil, catatan revisi, dan restore point antar-fase.</p>
+                    </div>
+                    <button id="btn-add-snippet-modal" onclick="CodeVaultModule.openAddModal()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition flex items-center gap-2 shadow-lg shadow-sky-600/20">
+                        <i class="fa-solid fa-plus"></i>
+                        Simpan Snippet Baru
+                    </button>
+                </div>
+
+                <div id="code-vault-container" class="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono">
+                    <!-- Snippets render dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 6: VIEW-ERROR-TRACKER -->
+            <section id="view-error-tracker" class="tab-view hidden space-y-6">
+                <div class="glass-panel p-5 rounded-xl flex items-center justify-between">
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bug text-sky-400"></i>
+                            Smart Error Tracker & Bug Resolution Center
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Pusat pencatatan, pemantauan tingkat keparahan (Severity), dan penyelesaian bug runtime.</p>
+                    </div>
+                    <button id="btn-add-error-modal" onclick="ErrorTrackerModule.openLogModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition flex items-center gap-2 shadow-lg shadow-rose-600/20">
+                        <i class="fa-solid fa-bug-slash"></i>
+                        Laporkan Error Baru
+                    </button>
+                </div>
+
+                <div id="error-tracker-container" class="space-y-4 font-mono">
+                    <!-- Error logs render dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 7: VIEW-BACKUP-SETTINGS -->
+            <section id="view-backup-settings" class="tab-view hidden space-y-6">
+                <div class="glass-panel p-6 rounded-xl space-y-6">
+                    <div class="flex items-center justify-between border-b border-panelBorder pb-4">
+                        <div>
+                            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-sky-400"></i>
+                                Backup, Export & System Settings
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-1">Kelola data terpusat LocalStorage, ekspor cadangan JSON, atau pulihkan state proyek.</p>
+                        </div>
+                        <span class="text-xs font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-3 py-1 rounded-lg">STORAGE V12</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="glass-panel p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="w-10 h-10 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-lg mb-3">
+                                    <i class="fa-solid fa-file-export"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-white">Export JSON Backup</h3>
+                                <p class="text-xs text-slate-400 mt-1">Unduh seluruh state proyek sebagai file `.json` lokal.</p>
+                            </div>
+                            <button id="btn-export-json" class="mt-5 w-full bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20">
+                                <i class="fa-solid fa-download"></i>
+                                Export JSON Backup
+                            </button>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-lg mb-3">
+                                    <i class="fa-solid fa-file-import"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-white">Import JSON Backup</h3>
+                                <p class="text-xs text-slate-400 mt-1">Unggah file backup `.json` untuk memulihkan seluruh data state TCC v1.2 secara otomatis.</p>
+                            </div>
+                            <div>
+                                <input type="file" id="import-json-input" accept=".json" class="hidden">
+                                <button id="btn-import-trigger" class="mt-5 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                                    <i class="fa-solid fa-upload"></i>
+                                    Import File JSON
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-xl border border-rose-900/40 bg-rose-950/10 flex flex-col justify-between">
+                            <div>
+                                <div class="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-lg mb-3">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-rose-300">Reset System State</h3>
+                                <p class="text-xs text-slate-400 mt-1">Kembalikan seluruh data LocalStorage ke pengaturan awal (`DEFAULT_STATE`).</p>
+                            </div>
+                            <button id="btn-reset-system" class="mt-5 w-full bg-rose-700/80 hover:bg-rose-600 text-white font-medium text-xs py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2 border border-rose-600/50">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                Reset to Default
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 font-mono text-xs space-y-2">
+                        <div class="flex items-center justify-between text-slate-300">
+                            <span>LOCALSTORAGE KEY:</span>
+                            <span class="text-sky-400 font-bold">TCC_STORAGE_V12</span>
+                        </div>
+                        <div class="flex items-center justify-between text-slate-300">
+                            <span>CURRENT MEMORY CONSUMPTION:</span>
+                            <span class="text-emerald-400 font-bold" id="settings-storage-size">0 KB</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Confirm Dialog Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+        <div class="glass-panel p-6 rounded-xl max-w-md w-full mx-4 border border-slate-700 shadow-2xl space-y-4">
+            <div class="flex items-center space-x-3 text-amber-400">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                <h3 class="text-base font-bold text-white" id="confirm-modal-title">Konfirmasi Tindakan</h3>
+            </div>
+            <p class="text-xs text-slate-300" id="confirm-modal-msg">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+            <div class="flex items-center justify-end space-x-3 pt-2">
+                <button id="btn-modal-cancel" class="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-800 transition">Batal</button>
+                <button id="btn-modal-confirm" class="px-4 py-2 rounded-lg text-xs font-medium bg-rose-600 hover:bg-rose-500 text-white transition">Konfirmasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Form Dialog Modal -->
+    <div id="file-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="glass-panel p-6 rounded-xl max-w-lg w-full mx-4 border border-slate-700 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2" id="file-modal-title">
+                    <i class="fa-solid fa-file-circle-plus text-sky-400"></i>
+                    Tambah Berkas Proyek Baru
+                </h3>
+                <button id="btn-close-file-modal" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="file-modal-form" class="space-y-4 font-mono text-xs">
+                <input type="hidden" id="modal-file-id">
+                
+                <div>
+                    <label class="block text-slate-400 mb-1">FILE NAME <span class="text-rose-400">*</span></label>
+                    <input type="text" id="modal-file-name" required placeholder="e.g. authEngine.js" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">FILE PATH <span class="text-rose-400">*</span></label>
+                    <input type="text" id="modal-file-path" required placeholder="e.g. js/modules/authEngine.js" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">STATUS DEVELOPMENT</label>
+                    <select id="modal-file-status" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                        <option value="Not Started">Not Started</option>
+                        <option value="Drafted">Drafted</option>
+                        <option value="Safe & Tested">Safe & Tested</option>
+                        <option value="Error/Need Fix">Error/Need Fix</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">PREREQUISITE DEPENDENCIES (Select Required Files)</label>
+                    <div id="modal-prereq-container" class="max-h-36 overflow-y-auto bg-slate-950/70 border border-slate-800 rounded-lg p-3 space-y-2">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+                    <button type="button" id="btn-cancel-file-modal" class="px-4 py-2 rounded-lg font-sans text-xs font-medium text-slate-400 hover:bg-slate-800 transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg font-sans text-xs font-medium bg-sky-600 hover:bg-sky-500 text-white transition flex items-center gap-1.5 shadow-lg shadow-sky-600/20">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Simpan Berkas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Code Vault Snippet Modal -->
+    <div id="vault-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="glass-panel p-6 rounded-xl max-w-xl w-full mx-4 border border-slate-700 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-box-archive text-sky-400"></i>
+                    Simpan Snippet Kode ke Vault
+                </h3>
+                <button onclick="document.getElementById('vault-modal').classList.add('hidden')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="vault-modal-form" class="space-y-4 font-mono text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">TARGET FILE <span class="text-rose-400">*</span></label>
+                    <select id="vault-file-select" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">REVISION TAG / VERSION</label>
+                    <input type="text" id="vault-version-input" placeholder="e.g. v1.2-stable" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">NOTES / DESCRIPTION</label>
+                    <input type="text" id="vault-notes-input" placeholder="Catatan singkat revisi kode ini" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-400">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">STABLE CODE SNIPPET <span class="text-rose-400">*</span></label>
+                    <textarea id="vault-code-input" rows="6" required placeholder="// Paste kode utuh / fungsi stabil di sini" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-emerald-400 focus:outline-none focus:border-sky-400 resize-none font-mono"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+                    <button type="button" onclick="document.getElementById('vault-modal').classList.add('hidden')" class="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-medium transition shadow-lg shadow-sky-600/20">Simpan Snippet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Error Tracker Modal -->
+    <div id="error-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+        <div class="glass-panel p-6 rounded-xl max-w-lg w-full mx-4 border border-slate-700 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-rose-400 flex items-center gap-2">
+                    <i class="fa-solid fa-bug text-rose-400"></i>
+                    Laporkan / Catat Error Baru
+                </h3>
+                <button onclick="document.getElementById('error-modal').classList.add('hidden')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="error-modal-form" class="space-y-4 font-mono text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">TARGET FILE <span class="text-rose-400">*</span></label>
+                    <select id="error-file-select" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-rose-400">
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">SEVERITY LEVEL</label>
+                    <select id="error-severity-select" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-rose-400">
+                        <option value="Low">Low (Tampilan Minor)</option>
+                        <option value="Medium" selected>Medium (Fungsi Tidak Sesuai)</option>
+                        <option value="High">High (Error Logic / Crash)</option>
+                        <option value="Critical">Critical (Sistem Mati / Data Loss)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">DESKRIPSI BUG / LOG ERROR <span class="text-rose-400">*</span></label>
+                    <textarea id="error-desc-input" rows="4" required placeholder="Jelaskan pesan error atau kendala yang dialami secara detail" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-rose-200 focus:outline-none focus:border-rose-400 resize-none font-mono"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+                    <button type="button" onclick="document.getElementById('error-modal').classList.add('hidden')" class="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium transition shadow-lg shadow-rose-600/20">Simpan Log Bug</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const StorageEngine = {
+            KEY: 'TCC_STORAGE_V12',
+            DEFAULT_STATE: {
+                projectInfo: {
+                    name: "Trisula Command Center",
+                    version: "1.2 Enterprise",
+                    owner: "Lead Architect",
+                    created: new Date().toISOString(),
+                    lastUpdated: new Date().toISOString()
+                },
+                blueprint: {
+                    techStack: ["Tailwind CSS v3", "Vanilla JS ES6+", "LocalStorage API", "FontAwesome v6"],
+                    architectureSpecs: "Clean Architecture SPA with LocalStorage State Management Engine",
+                    globalVariables: ["TCC_STORAGE_V12", "sidebarCollapsed", "currentTab"]
+                },
+                fileTree: [
+                    { id: "f1", fileName: "index.html", path: "index.html", status: "Safe & Tested", prerequisites: [] },
+                    { id: "f2", fileName: "styles.css", path: "css/styles.css", status: "Safe & Tested", prerequisites: ["f1"] },
+                    { id: "f3", fileName: "app.js", path: "js/app.js", status: "Safe & Tested", prerequisites: ["f1", "f2"] },
+                    { id: "f4", fileName: "storage.js", path: "js/storage.js", status: "Safe & Tested", prerequisites: ["f3"] },
+                    { id: "f5", fileName: "navigation.js", path: "js/navigation.js", status: "Safe & Tested", prerequisites: ["f4"] },
+                    { id: "f6", fileName: "fileTree.js", path: "js/fileTree.js", status: "Safe & Tested", prerequisites: ["f4", "f5"] },
+                    { id: "f7", fileName: "tcgEngine.js", path: "js/tcgEngine.js", status: "Safe & Tested", prerequisites: ["f4", "f6"] }
+                ],
+                codeVault: [
+                    { id: "v1", fileId: "f1", version: "v1.2-core", notes: "Core UI Skeleton & Single-File Container", codeText: "<!-- TRISULA COMMAND CENTER SPA CORE -->", timestamp: new Date().toISOString() }
+                ],
+                errorLogs: [],
+                activeTab: "dashboard"
+            },
+
+            initStorage() {
+                try {
+                    const existingData = localStorage.getItem(this.KEY);
+                    if (!existingData) {
+                        this.saveData(this.DEFAULT_STATE);
+                    }
+                } catch (e) {
+                    console.error('[TCC StorageEngine Error]:', e);
+                }
+            },
+
+            getData() {
+                try {
+                    const raw = localStorage.getItem(this.KEY);
+                    return raw ? JSON.parse(raw) : this.DEFAULT_STATE;
+                } catch (e) {
+                    return this.DEFAULT_STATE;
+                }
+            },
+
+            saveData(data) {
+                try {
+                    data.projectInfo.lastUpdated = new Date().toISOString();
+                    localStorage.setItem(this.KEY, JSON.stringify(data));
+                    this.updateUIStats();
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            },
+
+            exportJSON() {
+                try {
+                    const data = this.getData();
+                    const jsonStr = JSON.stringify(data, null, 2);
+                    const blob = new Blob([jsonStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const now = new Date();
+                    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+                    const filename = `TCC_Backup_${dateStr}.json`;
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    showToast(`Backup berhasil diunduh: ${filename}`, 'success');
+                } catch (e) {
+                    showToast('Gagal melakukan ekspor data JSON!', 'error');
+                }
+            },
+
+            importJSON(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        if (parsed.projectInfo && parsed.fileTree) {
+                            this.saveData(parsed);
+                            showToast('Data JSON berhasil diimpor!', 'success');
+                            setTimeout(() => window.location.reload(), 800);
+                        } else {
+                            showToast('Format JSON tidak valid!', 'error');
+                        }
+                    } catch (err) {
+                        showToast('Gagal membaca file JSON!', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            },
+
+            resetData() {
+                this.saveData(this.DEFAULT_STATE);
+                showToast('Sistem dikembalikan ke default!', 'info');
+                setTimeout(() => window.location.reload(), 800);
+            },
+
+            getStorageSize() {
+                const raw = localStorage.getItem(this.KEY) || '';
+                const bytes = new Blob([raw]).size;
+                return (bytes / 1024).toFixed(2) + ' KB';
+            },
+
+            updateUIStats() {
+                const data = this.getData();
+                const size = this.getStorageSize();
+
+                const openErrorsCount = (data.errorLogs || []).filter(err => err.status !== 'Resolved').length;
+
+                const headerFileEl = document.getElementById('header-file-count');
+                const headerErrorEl = document.getElementById('header-error-count');
+                const sideStorageSize = document.getElementById('sidebar-storage-size');
+                const setStorageSize = document.getElementById('settings-storage-size');
+                const dashStorageSize = document.getElementById('dash-storage-size');
+                const dashFileCount = document.getElementById('dash-file-count');
+                const dashVaultCount = document.getElementById('dash-vault-count');
+
+                if (headerFileEl) headerFileEl.textContent = data.fileTree ? data.fileTree.length : 0;
+                if (headerErrorEl) headerErrorEl.textContent = openErrorsCount;
+                if (sideStorageSize) sideStorageSize.textContent = size;
+                if (setStorageSize) setStorageSize.textContent = size;
+                if (dashStorageSize) dashStorageSize.textContent = size;
+                if (dashFileCount) dashFileCount.textContent = `${data.fileTree ? data.fileTree.length : 0} File`;
+                if (dashVaultCount) dashVaultCount.textContent = `${data.codeVault ? data.codeVault.length : 0} Snippet`;
+            }
+        };
+
+        const NavigationController = {
+            activeTab: 'dashboard',
+            tabTitles: {
+                'dashboard': { title: 'DASHBOARD / OVERVIEW', breadcrumb: 'overview' },
+                'architecture': { title: 'ARCHITECTURE & BLUEPRINT', breadcrumb: 'architecture' },
+                'file-tree': { title: 'TASK & FILE DEPENDENCY TREE', breadcrumb: 'task-tree' },
+                'tcg': { title: 'COMMAND GENERATOR (TCG ENGINE)', breadcrumb: 'cmd-generator' },
+                'code-vault': { title: 'CODE VAULT & REVISION STORE', breadcrumb: 'code-vault' },
+                'error-tracker': { title: 'ERROR TRACKER & RESOLUTION', breadcrumb: 'error-tracker' },
+                'backup-settings': { title: 'BACKUP & SYSTEM SETTINGS', breadcrumb: 'settings' }
+            },
+
+            init() {
+                const data = StorageEngine.getData();
+                if (data.activeTab && this.tabTitles[data.activeTab]) {
+                    this.activeTab = data.activeTab;
+                }
+
+                this.bindEvents();
+                this.switchTab(this.activeTab);
+            },
+
+            bindEvents() {
+                const navButtons = document.querySelectorAll('#sidebar-nav button[data-tab]');
+                navButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const tabId = btn.getAttribute('data-tab');
+                        this.switchTab(tabId);
+                    });
+                });
+            },
+
+            switchTab(tabId) {
+                if (!this.tabTitles[tabId]) return;
+
+                this.activeTab = tabId;
+
+                const data = StorageEngine.getData();
+                data.activeTab = tabId;
+                StorageEngine.saveData(data);
+
+                const views = document.querySelectorAll('.tab-view');
+                views.forEach(view => view.classList.add('hidden'));
+
+                const navBtns = document.querySelectorAll('#sidebar-nav button');
+                navBtns.forEach(btn => btn.classList.remove('nav-item-active'));
+
+                const targetView = document.getElementById(`view-${tabId}`);
+                if (targetView) targetView.classList.remove('hidden');
+
+                const targetBtn = document.querySelector(`#sidebar-nav button[data-tab="${tabId}"]`);
+                if (targetBtn) targetBtn.classList.add('nav-item-active');
+
+                document.getElementById('page-title').textContent = this.tabTitles[tabId].title;
+                document.getElementById('page-breadcrumb').textContent = this.tabTitles[tabId].breadcrumb;
+
+                this.renderViewContent(tabId);
+            },
+
+            renderViewContent(tabId) {
+                const data = StorageEngine.getData();
+
+                if (tabId === 'dashboard' && window.DashboardModule) {
+                    window.DashboardModule.renderDashboard();
+                } else if (tabId === 'file-tree' && window.FileTreeModule) {
+                    window.FileTreeModule.renderTree();
+                } else if (tabId === 'tcg' && window.TCGEngineModule) {
+                    window.TCGEngineModule.initTCG();
+                } else if (tabId === 'code-vault' && window.CodeVaultModule) {
+                    window.CodeVaultModule.renderVault();
+                } else if (tabId === 'error-tracker' && window.ErrorTrackerModule) {
+                    window.ErrorTrackerModule.renderErrors();
+                } else if (tabId === 'architecture') {
+                    const container = document.getElementById('architecture-blueprint-content');
+                    if (container && data.blueprint) {
+                        container.innerHTML = `
+                            <div class="p-4 rounded-lg bg-slate-900/60 border border-slate-800 space-y-2 font-mono text-xs">
+                                <h4 class="font-bold text-sky-400 uppercase">Tech Stack Ledger</h4>
+                                <ul class="list-disc list-inside text-slate-300 space-y-1">
+                                    ${data.blueprint.techStack.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="p-4 rounded-lg bg-slate-900/60 border border-slate-800 space-y-2 font-mono text-xs">
+                                <h4 class="font-bold text-emerald-400 uppercase">Architecture Specs</h4>
+                                <p class="text-slate-300">${data.blueprint.architectureSpecs}</p>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        };
+
+        const DashboardModule = {
+            renderDashboard() {
+                const data = StorageEngine.getData();
+                const fileTree = data.fileTree || [];
+                const errorLogs = data.errorLogs || [];
+
+                const totalFiles = fileTree.length;
+                const safeFiles = fileTree.filter(f => f.status === 'Safe & Tested').length;
+                const openErrors = errorLogs.filter(e => e.status !== 'Resolved').length;
+
+                const progressPercent = totalFiles > 0 ? Math.round((safeFiles / totalFiles) * 100) : 0;
+
+                const progressBar = document.getElementById('dash-progress-bar');
+                const progressText = document.getElementById('dash-progress-text');
+                const safeSubText = document.getElementById('dash-safe-file-sub');
+
+                if (progressBar) progressBar.style.width = `${progressPercent}%`;
+                if (progressText) progressText.textContent = `${progressPercent}%`;
+                if (safeSubText) safeSubText.textContent = `${safeFiles} Safe & Tested`;
+
+                const alertBox = document.getElementById('dash-error-alert');
+                const alertMsg = document.getElementById('dash-error-alert-msg');
+
+                if (openErrors > 0) {
+                    if (alertBox) alertBox.classList.remove('hidden');
+                    if (alertMsg) alertMsg.textContent = `Terdapat ${openErrors} bug/error aktif yang memerlukan isolasi dan perbaikan di Error Tracker.`;
+                } else {
+                    if (alertBox) alertBox.classList.add('hidden');
+                }
+            }
+        };
+
+        const FileTreeModule = {
+            STATUS_ENUM: {
+                NOT_STARTED: 'Not Started',
+                DRAFTED: 'Drafted',
+                SAFE_TESTED: 'Safe & Tested',
+                ERROR_NEED_FIX: 'Error/Need Fix'
+            },
+            currentFilter: 'ALL',
+
+            checkDependencyStatus(fileId) {
+                const data = StorageEngine.getData();
+                const file = data.fileTree.find(f => f.id === fileId);
+                if (!file || !file.prerequisites || file.prerequisites.length === 0) {
+                    return { isLocked: false, pendingPrereqs: [] };
+                }
+
+                const pendingPrereqs = [];
+                file.prerequisites.forEach(prereqId => {
+                    const prereqFile = data.fileTree.find(f => f.id === prereqId);
+                    if (!prereqFile || prereqFile.status !== this.STATUS_ENUM.SAFE_TESTED) {
+                        pendingPrereqs.push(prereqFile ? prereqFile.fileName : prereqId);
+                    }
+                });
+
+                return {
+                    isLocked: pendingPrereqs.length > 0,
+                    pendingPrereqs
+                };
+            },
+
+            renderTree() {
+                const container = document.getElementById('file-tree-container');
+                if (!container) return;
+
+                const data = StorageEngine.getData();
+                const fileTree = data.fileTree || [];
+
+                let safeCount = 0;
+                let lockedCount = 0;
+                let errorCount = 0;
+
+                fileTree.forEach(f => {
+                    if (f.status === this.STATUS_ENUM.SAFE_TESTED) safeCount++;
+                    if (f.status === this.STATUS_ENUM.ERROR_NEED_FIX) errorCount++;
+                    const dep = this.checkDependencyStatus(f.id);
+                    if (dep.isLocked) lockedCount++;
+                });
+
+                document.getElementById('tree-stat-total').textContent = fileTree.length;
+                document.getElementById('tree-stat-safe').textContent = safeCount;
+                document.getElementById('tree-stat-locked').textContent = lockedCount;
+                document.getElementById('tree-stat-error').textContent = errorCount;
+
+                const filtered = fileTree.filter(f => {
+                    const dep = this.checkDependencyStatus(f.id);
+                    if (this.currentFilter === 'LOCKED') return dep.isLocked;
+                    if (this.currentFilter === 'SAFE') return f.status === this.STATUS_ENUM.SAFE_TESTED;
+                    if (this.currentFilter === 'ERROR') return f.status === this.STATUS_ENUM.ERROR_NEED_FIX;
+                    return true;
+                });
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full py-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-950/30">
+                            <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-2"></i>
+                            <p class="text-xs font-mono text-slate-400">Tidak ada berkas yang cocok dengan filter [${this.currentFilter}].</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filtered.map(file => {
+                    const dep = this.checkDependencyStatus(file.id);
+                    const isLocked = dep.isLocked;
+
+                    const badgeClass = file.status === this.STATUS_ENUM.SAFE_TESTED ? 'status-badge-safe' :
+                                       file.status === this.STATUS_ENUM.DRAFTED ? 'status-badge-drafted' :
+                                       file.status === this.STATUS_ENUM.ERROR_NEED_FIX ? 'status-badge-error' :
+                                       'status-badge-not-started';
+
+                    const prereqNames = (file.prerequisites || []).map(pId => {
+                        const found = fileTree.find(x => x.id === pId);
+                        const isSafe = found && found.status === this.STATUS_ENUM.SAFE_TESTED;
+                        return `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono border ${isSafe ? 'bg-emerald-950/80 border-emerald-800 text-emerald-300' : 'bg-rose-950/80 border-rose-800 text-rose-300'}">${found ? found.fileName : pId}</span>`;
+                    }).join(' ');
+
+                    return `
+                        <div class="dependency-card ${isLocked ? 'card-locked' : ''} p-4 rounded-xl flex flex-col justify-between space-y-4 relative overflow-hidden">
+                            ${isLocked ? `
+                                <div class="absolute top-0 right-0 left-0 bg-rose-950/80 border-b border-rose-800/60 px-3 py-1 flex items-center justify-between text-[10px] text-rose-300 font-mono">
+                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-rose-400"></i> PREREQUISITES PENDING</span>
+                                    <span class="truncate max-w-[150px] opacity-80">${dep.pendingPrereqs.join(', ')}</span>
+                                </div>
+                            ` : ''}
+
+                            <div class="${isLocked ? 'pt-5' : ''} space-y-2">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <span class="text-[10px] font-mono text-sky-400 font-bold">${file.id}</span>
+                                        <h3 class="text-sm font-bold text-white truncate hover:text-sky-300 transition">${file.fileName}</h3>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${badgeClass}">${file.status}</span>
+                                </div>
+
+                                <p class="text-[11px] font-mono text-slate-400 truncate bg-slate-900/80 px-2 py-1 rounded border border-slate-800/80">
+                                    <i class="fa-regular fa-file-code text-slate-500 mr-1"></i>${file.path}
+                                </p>
+
+                                <div class="pt-1">
+                                    <span class="text-[10px] font-mono text-slate-500 uppercase block mb-1">Prerequisites:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${prereqNames || '<span class="text-[10px] font-mono text-slate-600">None (Root Level)</span>'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                                <select onchange="FileTreeModule.updateFileStatus('${file.id}', this.value)" class="bg-slate-900 border border-slate-800 text-xs text-slate-300 rounded px-2 py-1 font-mono focus:outline-none focus:border-sky-400">
+                                    <option value="Not Started" ${file.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                                    <option value="Drafted" ${file.status === 'Drafted' ? 'selected' : ''}>Drafted</option>
+                                    <option value="Safe & Tested" ${file.status === 'Safe & Tested' ? 'selected' : ''}>Safe & Tested</option>
+                                    <option value="Error/Need Fix" ${file.status === 'Error/Need Fix' ? 'selected' : ''}>Error/Need Fix</option>
+                                </select>
+
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="FileTreeModule.openEditModal('${file.id}')" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-sky-400 transition" title="Edit File">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button onclick="FileTreeModule.confirmDelete('${file.id}')" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition" title="Hapus File">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            updateFileStatus(fileId, newStatus) {
+                const data = StorageEngine.getData();
+                const file = data.fileTree.find(f => f.id === fileId);
+                if (!file) return;
+
+                if (newStatus === this.STATUS_ENUM.SAFE_TESTED) {
+                    const dep = this.checkDependencyStatus(fileId);
+                    if (dep.isLocked) {
+                        showToast(`Gagal! Berkas [${file.fileName}] belum bisa di-mark Safe & Tested karena prasyarat (${dep.pendingPrereqs.join(', ')}) belum aman!`, 'error');
+                        this.renderTree();
+                        return;
+                    }
+                }
+
+                file.status = newStatus;
+                StorageEngine.saveData(data);
+                showToast(`Status berkas [${file.fileName}] diperbarui ke "${newStatus}".`, 'success');
+                this.renderTree();
+            },
+
+            openAddModal() {
+                const modal = document.getElementById('file-modal');
+                const form = document.getElementById('file-modal-form');
+                document.getElementById('file-modal-title').innerHTML = `<i class="fa-solid fa-file-circle-plus text-sky-400"></i> Tambah Berkas Proyek Baru`;
+                document.getElementById('modal-file-id').value = '';
+                form.reset();
+
+                this.populatePrereqCheckboxes([]);
+                modal.classList.remove('hidden');
+            },
+
+            openEditModal(fileId) {
+                const data = StorageEngine.getData();
+                const file = data.fileTree.find(f => f.id === fileId);
+                if (!file) return;
+
+                const modal = document.getElementById('file-modal');
+                document.getElementById('file-modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-sky-400"></i> Edit Berkas [${file.fileName}]`;
+                document.getElementById('modal-file-id').value = file.id;
+                document.getElementById('modal-file-name').value = file.fileName;
+                document.getElementById('modal-file-path').value = file.path;
+                document.getElementById('modal-file-status').value = file.status;
+
+                this.populatePrereqCheckboxes(file.prerequisites || [], file.id);
+                modal.classList.remove('hidden');
+            },
+
+            populatePrereqCheckboxes(selectedIds = [], currentFileId = null) {
+                const container = document.getElementById('modal-prereq-container');
+                const data = StorageEngine.getData();
+                const availableFiles = data.fileTree.filter(f => f.id !== currentFileId);
+
+                if (availableFiles.length === 0) {
+                    container.innerHTML = `<span class="text-slate-500 italic">Belum ada file lain yang dapat dijadikan prasyarat.</span>`;
+                    return;
+                }
+
+                container.innerHTML = availableFiles.map(f => `
+                    <label class="flex items-center space-x-2 text-slate-300 cursor-pointer hover:text-white">
+                        <input type="checkbox" name="modal-prereq-check" value="${f.id}" ${selectedIds.includes(f.id) ? 'checked' : ''} class="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-sky-500">
+                        <span>${f.fileName} <span class="text-[10px] text-slate-500">(${f.path})</span></span>
+                    </label>
+                `).join('');
+            },
+
+            saveModalSubmit(e) {
+                e.preventDefault();
+                const data = StorageEngine.getData();
+                const fileId = document.getElementById('modal-file-id').value;
+                const fileName = document.getElementById('modal-file-name').value.trim();
+                const path = document.getElementById('modal-file-path').value.trim();
+                const status = document.getElementById('modal-file-status').value;
+
+                const prereqChecks = document.querySelectorAll('input[name="modal-prereq-check"]:checked');
+                const prerequisites = Array.from(prereqChecks).map(cb => cb.value);
+
+                if (fileId) {
+                    const file = data.fileTree.find(f => f.id === fileId);
+                    if (file) {
+                        file.fileName = fileName;
+                        file.path = path;
+                        file.status = status;
+                        file.prerequisites = prerequisites;
+                    }
+                } else {
+                    const newId = 'f' + (data.fileTree.length + 1);
+                    data.fileTree.push({
+                        id: newId,
+                        fileName,
+                        path,
+                        status,
+                        prerequisites
+                    });
+                }
+
+                StorageEngine.saveData(data);
+                document.getElementById('file-modal').classList.add('hidden');
+                showToast(`Berkas [${fileName}] berhasil disimpan!`, 'success');
+                this.renderTree();
+            },
+
+            confirmDelete(fileId) {
+                const data = StorageEngine.getData();
+                const file = data.fileTree.find(f => f.id === fileId);
+                if (!file) return;
+
+                showConfirmModal(
+                    'Hapus Berkas Dependensi',
+                    `Apakah Anda yakin ingin menghapus file "${file.fileName}" dari struktur tree?`,
+                    () => {
+                        data.fileTree = data.fileTree.filter(f => f.id !== fileId);
+                        data.fileTree.forEach(f => {
+                            if (f.prerequisites) {
+                                f.prerequisites = f.prerequisites.filter(p => p !== fileId);
+                            }
+                        });
+                        StorageEngine.saveData(data);
+                        showToast(`Berkas [${file.fileName}] berhasil dihapus.`, 'info');
+                        this.renderTree();
+                    }
+                );
+            }
+        };
+
+        const TCGEngineModule = {
+            initTCG() {
+                try {
+                    const selectEl = document.getElementById('tcg-file-select');
+                    if (!selectEl) return;
+
+                    const data = StorageEngine.getData();
+                    const fileTree = (data && data.fileTree) ? data.fileTree : [];
+
+                    selectEl.innerHTML = '<option value="">-- Pilih Berkas Target --</option>';
+
+                    if (fileTree.length === 0) {
+                        const opt = document.createElement('option');
+                        opt.value = "";
+                        opt.textContent = "Belum ada file terdaftar di File Tree";
+                        opt.disabled = true;
+                        selectEl.appendChild(opt);
+                        return;
+                    }
+
+                    fileTree.forEach(file => {
+                        const opt = document.createElement('option');
+                        opt.value = file.id;
+                        opt.textContent = `${file.fileName} (${file.path}) - [${file.status}]`;
+                        selectEl.appendChild(opt);
+                    });
+                } catch (error) {
+                    console.error('[TCGEngineModule Error]:', error);
+                }
+            },
+
+            generatePrompt(config) {
+                try {
+                    const { fileId, mode, customInstructions, includeBlueprint, includePrereqs } = config;
+                    const data = StorageEngine.getData();
+                    if (!data) return;
+
+                    const file = data.fileTree.find(f => f.id === fileId);
+                    if (!file) {
+                        showToast('Silakan pilih berkas target terlebih dahulu!', 'error');
+                        return;
+                    }
+
+                    let prereqList = [];
+                    if (file.prerequisites && file.prerequisites.length > 0) {
+                        prereqList = file.prerequisites.map(pId => {
+                            const found = data.fileTree.find(x => x.id === pId);
+                            return found ? `${found.fileName} (${found.status})` : pId;
+                        });
+                    }
+
+                    let modeTitle = "";
+                    let modeGoal = "";
+                    switch (mode) {
+                        case 'ERROR_FIX':
+                            modeTitle = "ERROR RECOVERY & BUG ISOLATION EXECUTION";
+                            modeGoal = "Isolasi bug runtime, lakukan root-cause analysis, dan perbaiki kode secara utuh hingga bebas dari error.";
+                            break;
+                        case 'REFACTOR':
+                            modeTitle = "CODE REFACTORING & OPTIMIZATION EXECUTION";
+                            modeGoal = "Restrukturisasi kode agar lebih bersih (clean code), optimasi penggunaan memori, serta hilangkan redundansi.";
+                            break;
+                        case 'UNIT_TEST':
+                            modeTitle = "UNIT TESTING & QUALITY ASSURANCE AUDIT";
+                            modeGoal = "Buatkan rangkaian unit test yang ketat dan lakukan audit reliabilitas pada fungsi-fungsi utama berkas.";
+                            break;
+                        case 'NEW_FEATURE':
+                        default:
+                            modeTitle = "MASTER PROMPT FEATURE EXECUTION";
+                            modeGoal = "Implementasikan fitur baru secara lengkap dan utuh dengan standar Enterprise Grade.";
+                            break;
+                    }
+
+                    const now = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+                    let promptText = `======================================================================
+MASTER PROMPT EXECUTION: TRISULA COMMAND CENTER (TCC) v1.2
+TARGET MODE : ${modeTitle}
+TARGET FILE : ${file.fileName} (${file.path})
+TIMESTAMP   : ${now}
+======================================================================
+
+Bro TRISULACODER v10.2, jalankan instruksi pengkodean untuk berkas proyek berikut:
+
+----------------------------------------------------------------------
+1. SPESIFIKASI BERKAS TARGET & METADATA
+----------------------------------------------------------------------
+- Nama File   : ${file.fileName}
+- Lokasi Path : ${file.path}
+- ID Berkas   : ${file.id}
+- Status Saat Ini : ${file.status}
+`;
+
+                    if (includePrereqs) {
+                        promptText += `- Prasyarat Dependensi: ${prereqList.length > 0 ? prereqList.join(', ') : 'None (Root Level)'}\n`;
+                    }
+
+                    if (includeBlueprint && data.blueprint) {
+                        promptText += `\n----------------------------------------------------------------------
+2. BLUEPRINT ARCHITECTURE CONTEXT
+----------------------------------------------------------------------
+- Tech Stack : ${data.blueprint.techStack ? data.blueprint.techStack.join(', ') : 'Standard Web Tech'}
+- Specs      : ${data.blueprint.architectureSpecs || 'Clean Architecture'}
+`;
+                    }
+
+                    promptText += `\n----------------------------------------------------------------------
+3. TARGET GOAL & INSTRUKSIONAL KHUSUS
+----------------------------------------------------------------------
+Target Utama:
+${modeGoal}
+
+Instruksi Tambahan / Log Detail:
+${customInstructions ? customInstructions.trim() : 'Jalankan implementasi standar tanpa error runtime.'}
+
+----------------------------------------------------------------------
+4. ATURAN KODE WAJIB (ZERO HALLUCINATION & ZERO FEATURE LOSS)
+----------------------------------------------------------------------
+1. Berikan KODE SUMBER UTUH DENGAN FILE BLOCK RESMI.
+2. DILARANG MEMOTONG KODE (Dilarang keras menggunakan placeholder "// ... kode lama").
+3. Pastikan kode langsung runnable, efisien, dan memiliki sistem error handling try/catch yang kuat.
+4. Terapkan visual cyber aesthetics jika berkas berhubungan dengan antarmuka UI.
+
+Langsung berikan file kode perbaikan/implementasi utuhnya sekarang, bro!`;
+
+                    const outputEl = document.getElementById('tcg-output-preview');
+                    if (outputEl) {
+                        outputEl.textContent = promptText;
+                    }
+
+                    showToast(`Command Prompt untuk [${file.fileName}] berhasil diracik!`, 'success');
+
+                } catch (error) {
+                    console.error('[TCGEngineModule Generate Error]:', error);
+                }
+            },
+
+            copyToClipboard() {
+                try {
+                    const outputEl = document.getElementById('tcg-output-preview');
+                    if (!outputEl) return;
+
+                    const textToCopy = outputEl.textContent;
+                    if (!textToCopy || textToCopy.includes('Pilih file target pada form konfigurasi')) {
+                        showToast('Belum ada prompt sintetis yang diracik!', 'error');
+                        return;
+                    }
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(textToCopy).then(() => {
+                            this.triggerCopySuccessFeedback();
+                        }).catch(err => {
+                            this.fallbackCopyToClipboard(textToCopy);
+                        });
+                    } else {
+                        this.fallbackCopyToClipboard(textToCopy);
+                    }
+                } catch (error) {
+                    console.error('[TCGEngineModule Copy Error]:', error);
+                }
+            },
+
+            fallbackCopyToClipboard(text) {
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    this.triggerCopySuccessFeedback();
+                } catch (err) {
+                    showToast('Gagal menyalin teks ke clipboard!', 'error');
+                }
+            },
+
+            triggerCopySuccessFeedback() {
+                const btnText = document.getElementById('btn-copy-tcg-text');
+                const btn = document.getElementById('btn-copy-tcg');
+
+                if (btnText && btn) {
+                    const originalText = btnText.textContent;
+                    btnText.textContent = "Copied!";
+                    btn.classList.remove('bg-sky-600', 'hover:bg-sky-500');
+                    btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+
+                    setTimeout(() => {
+                        btnText.textContent = originalText;
+                        btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                        btn.classList.add('bg-sky-600', 'hover:bg-sky-500');
+                    }, 2000);
+                }
+
+                showToast('Command Prompt berhasil disalin ke clipboard!', 'success');
+            },
+
+            clearOutput() {
+                const outputEl = document.getElementById('tcg-output-preview');
+                if (outputEl) {
+                    outputEl.textContent = `/* TRISULA COMMAND GENERATOR (TCG) v6.1 OUTPUT CONSOLE */\n/* Solusi otomatis pembuat Master Prompt & Error Recovery System */\n\nConsole telah dibersihkan. Pilih file target lalu klik "Synthesize Command Prompt".`;
+                }
+                showToast('Console output dibersihkan.', 'info');
+            }
+        };
+
+        const CodeVaultModule = {
+            renderVault() {
+                const container = document.getElementById('code-vault-container');
+                if (!container) return;
+
+                const data = StorageEngine.getData();
+                const codeVault = data.codeVault || [];
+                const fileTree = data.fileTree || [];
+
+                if (codeVault.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full py-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-950/30">
+                            <i class="fa-solid fa-box-archive text-3xl text-slate-600 mb-2"></i>
+                            <p class="text-xs font-mono text-slate-400">Belum ada snippet kode tersimpan di Code Vault.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = codeVault.map(vault => {
+                    const file = fileTree.find(f => f.id === vault.fileId);
+                    const fileName = file ? file.fileName : vault.fileId;
+
+                    return `
+                        <div class="glass-panel p-4 rounded-xl space-y-3 relative overflow-hidden border border-slate-800">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                <div>
+                                    <span class="text-[10px] text-sky-400 font-bold">${vault.version || 'v1.0'}</span>
+                                    <h3 class="text-sm font-bold text-white truncate">${fileName}</h3>
+                                </div>
+                                <span class="text-[10px] text-slate-500">${new Date(vault.timestamp).toLocaleDateString()}</span>
+                            </div>
+
+                            <p class="text-xs text-slate-400 italic">${vault.notes || 'Tanpa catatan'}</p>
+
+                            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 max-h-40 overflow-y-auto">
+                                <pre class="text-xs text-emerald-400 font-mono whitespace-pre-wrap">${this.escapeHTML(vault.codeText)}</pre>
+                            </div>
+
+                            <div class="flex items-center justify-end space-x-2 pt-1">
+                                <button onclick="CodeVaultModule.copySnippet('${vault.id}')" class="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white text-[11px] transition">
+                                    <i class="fa-regular fa-copy mr-1"></i>Copy
+                                </button>
+                                <button onclick="CodeVaultModule.deleteSnippet('${vault.id}')" class="px-2.5 py-1 rounded bg-rose-900/60 hover:bg-rose-700 text-rose-200 text-[11px] transition">
+                                    <i class="fa-solid fa-trash mr-1"></i>Hapus
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            openAddModal() {
+                const modal = document.getElementById('vault-modal');
+                const fileSelect = document.getElementById('vault-file-select');
+                const data = StorageEngine.getData();
+
+                if (!fileSelect) return;
+                fileSelect.innerHTML = (data.fileTree || []).map(f => `<option value="${f.id}">${f.fileName} (${f.path})</option>`).join('');
+
+                modal.classList.remove('hidden');
+            },
+
+            saveSnippetModal(e) {
+                e.preventDefault();
+                const fileId = document.getElementById('vault-file-select').value;
+                const version = document.getElementById('vault-version-input').value.trim() || 'v1.0';
+                const notes = document.getElementById('vault-notes-input').value.trim();
+                const codeText = document.getElementById('vault-code-input').value;
+
+                const data = StorageEngine.getData();
+                if (!data.codeVault) data.codeVault = [];
+
+                data.codeVault.push({
+                    id: 'v' + Date.now(),
+                    fileId,
+                    version,
+                    notes,
+                    codeText,
+                    timestamp: new Date().toISOString()
+                });
+
+                StorageEngine.saveData(data);
+                document.getElementById('vault-modal').classList.add('hidden');
+                document.getElementById('vault-modal-form').reset();
+                showToast('Snippet kode berhasil disimpan ke Vault!', 'success');
+                this.renderVault();
+            },
+
+            copySnippet(vaultId) {
+                const data = StorageEngine.getData();
+                const item = (data.codeVault || []).find(v => v.id === vaultId);
+                if (item && item.codeText) {
+                    TCGEngineModule.fallbackCopyToClipboard(item.codeText);
+                    showToast('Snippet kode disalin ke clipboard!', 'success');
+                }
+            },
+
+            deleteSnippet(vaultId) {
+                showConfirmModal(
+                    'Hapus Snippet Vault',
+                    'Apakah Anda yakin ingin menghapus snippet kode ini dari Vault?',
+                    () => {
+                        const data = StorageEngine.getData();
+                        data.codeVault = (data.codeVault || []).filter(v => v.id !== vaultId);
+                        StorageEngine.saveData(data);
+                        showToast('Snippet kode dihapus.', 'info');
+                        this.renderVault();
+                    }
+                );
+            },
+
+            escapeHTML(str) {
+                return str ? str.replace(/[&<>'"]/g, 
+                    tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+                ) : '';
+            }
+        };
+
+        const ErrorTrackerModule = {
+            renderErrors() {
+                const container = document.getElementById('error-tracker-container');
+                if (!container) return;
+
+                const data = StorageEngine.getData();
+                const errorLogs = data.errorLogs || [];
+                const fileTree = data.fileTree || [];
+
+                if (errorLogs.length === 0) {
+                    container.innerHTML = `
+                        <div class="py-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-950/30">
+                            <i class="fa-solid fa-shield-cat text-4xl text-emerald-400/60 mb-2"></i>
+                            <h3 class="text-sm font-bold text-slate-300">Sistem Bebas Error!</h3>
+                            <p class="text-xs font-mono text-slate-500 mt-1">Belum ada laporan bug/error aktif yang tercatat.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = errorLogs.map(err => {
+                    const file = fileTree.find(f => f.id === err.fileTarget);
+                    const fileName = file ? file.fileName : err.fileTarget;
+
+                    const severityClass = err.severity === 'Critical' ? 'bg-rose-950 text-rose-300 border-rose-700' :
+                                          err.severity === 'High' ? 'bg-amber-950 text-amber-300 border-amber-700' :
+                                          'bg-sky-950 text-sky-300 border-sky-700';
+
+                    const statusClass = err.status === 'Resolved' ? 'bg-emerald-950 text-emerald-400 border-emerald-700' :
+                                        'bg-rose-950 text-rose-400 border-rose-700 animate-pulse';
+
+                    return `
+                        <div class="glass-panel p-4 rounded-xl space-y-3 border border-slate-800 relative">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${severityClass}">${err.severity}</span>
+                                    <h3 class="text-xs font-bold text-white">${fileName}</h3>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusClass}">${err.status}</span>
+                                    <span class="text-[10px] text-slate-500">${new Date(err.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-rose-200 bg-rose-950/30 p-2.5 rounded border border-rose-900/40">${err.errorDescription}</p>
+
+                            <div class="flex items-center justify-end space-x-2 pt-1">
+                                ${err.status !== 'Resolved' ? `
+                                    <button onclick="ErrorTrackerModule.resolveError('${err.id}')" class="px-2.5 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] transition flex items-center gap-1">
+                                        <i class="fa-solid fa-check"></i> Mark Resolved
+                                    </button>
+                                ` : ''}
+                                <button onclick="ErrorTrackerModule.deleteError('${err.id}')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[11px] transition">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            openLogModal() {
+                const modal = document.getElementById('error-modal');
+                const fileSelect = document.getElementById('error-file-select');
+                const data = StorageEngine.getData();
+
+                if (!fileSelect) return;
+                fileSelect.innerHTML = (data.fileTree || []).map(f => `<option value="${f.id}">${f.fileName} (${f.path})</option>`).join('');
+
+                modal.classList.remove('hidden');
+            },
+
+            saveErrorModal(e) {
+                e.preventDefault();
+                const fileTarget = document.getElementById('error-file-select').value;
+                const severity = document.getElementById('error-severity-select').value;
+                const errorDescription = document.getElementById('error-desc-input').value.trim();
+
+                const data = StorageEngine.getData();
+                if (!data.errorLogs) data.errorLogs = [];
+
+                data.errorLogs.push({
+                    id: 'err-' + Date.now(),
+                    fileTarget,
+                    severity,
+                    errorDescription,
+                    status: 'Open',
+                    timestamp: new Date().toISOString()
+                });
+
+                // Update file status to Need Fix if severity high
+                const file = (data.fileTree || []).find(f => f.id === fileTarget);
+                if (file) {
+                    file.status = 'Error/Need Fix';
+                }
+
+                StorageEngine.saveData(data);
+                document.getElementById('error-modal').classList.add('hidden');
+                document.getElementById('error-modal-form').reset();
+                showToast('Log bug/error berhasil dicatat!', 'error');
+                this.renderErrors();
+            },
+
+            resolveError(errorId) {
+                const data = StorageEngine.getData();
+                const err = (data.errorLogs || []).find(e => e.id === errorId);
+                if (err) {
+                    err.status = 'Resolved';
+                    StorageEngine.saveData(data);
+                    showToast('Status error ditandai sebagai Resolved!', 'success');
+                    this.renderErrors();
+                }
+            },
+
+            deleteError(errorId) {
+                const data = StorageEngine.getData();
+                data.errorLogs = (data.errorLogs || []).filter(e => e.id !== errorId);
+                StorageEngine.saveData(data);
+                showToast('Log error dihapus.', 'info');
+                this.renderErrors();
+            }
+        };
+
+        window.StorageEngine = StorageEngine;
+        window.NavigationController = NavigationController;
+        window.DashboardModule = DashboardModule;
+        window.FileTreeModule = FileTreeModule;
+        window.TCGEngineModule = TCGEngineModule;
+        window.CodeVaultModule = CodeVaultModule;
+        window.ErrorTrackerModule = ErrorTrackerModule;
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-900/90 border-emerald-600 text-emerald-200' :
+                            type === 'error' ? 'bg-rose-900/90 border-rose-600 text-rose-200' :
+                            'bg-sky-900/90 border-sky-600 text-sky-200';
+            
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+
+            toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-lg border shadow-xl backdrop-blur-md text-xs font-medium ${bgClass} transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function showConfirmModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            const modalTitle = document.getElementById('confirm-modal-title');
+            const modalMsg = document.getElementById('confirm-modal-msg');
+            const btnCancel = document.getElementById('btn-modal-cancel');
+            const btnConfirm = document.getElementById('btn-modal-confirm');
+
+            if (!modal) return;
+
+            modalTitle.textContent = title;
+            modalMsg.textContent = message;
+            modal.classList.remove('hidden');
+
+            const handleCancel = () => {
+                modal.classList.add('hidden');
+                btnCancel.removeEventListener('click', handleCancel);
+                btnConfirm.removeEventListener('click', handleConfirm);
+            };
+
+            const handleConfirm = () => {
+                modal.classList.add('hidden');
+                btnCancel.removeEventListener('click', handleCancel);
+                btnConfirm.removeEventListener('click', handleConfirm);
+                onConfirm();
+            };
+
+            btnCancel.addEventListener('click', handleCancel);
+            btnConfirm.addEventListener('click', handleConfirm);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getUTCHours()).padStart(2, '0');
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) clockEl.textContent = `${hours}:${minutes}:${seconds} UTC`;
+        }
+
+        let sidebarCollapsed = false;
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleIcon = document.getElementById('toggle-icon');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+
+            sidebarCollapsed = !sidebarCollapsed;
+
+            if (sidebarCollapsed) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+                toggleIcon.className = 'fa-solid fa-chevron-right text-xs';
+                sidebarTexts.forEach(el => el.classList.add('hidden'));
+            } else {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+                toggleIcon.className = 'fa-solid fa-chevron-left text-xs';
+                sidebarTexts.forEach(el => el.classList.remove('hidden'));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            StorageEngine.initStorage();
+            NavigationController.init();
+            StorageEngine.updateUIStats();
+
+            // Modal & Form Bindings
+            const btnAddModal = document.getElementById('btn-add-file-modal');
+            if (btnAddModal) btnAddModal.addEventListener('click', () => FileTreeModule.openAddModal());
+
+            const btnCloseModal = document.getElementById('btn-close-file-modal');
+            const btnCancelModal = document.getElementById('btn-cancel-file-modal');
+            if (btnCloseModal) btnCloseModal.addEventListener('click', () => document.getElementById('file-modal').classList.add('hidden'));
+            if (btnCancelModal) btnCancelModal.addEventListener('click', () => document.getElementById('file-modal').classList.add('hidden'));
+
+            const fileForm = document.getElementById('file-modal-form');
+            if (fileForm) fileForm.addEventListener('submit', (e) => FileTreeModule.saveModalSubmit(e));
+
+            const vaultForm = document.getElementById('vault-modal-form');
+            if (vaultForm) vaultForm.addEventListener('submit', (e) => CodeVaultModule.saveSnippetModal(e));
+
+            const errorForm = document.getElementById('error-modal-form');
+            if (errorForm) errorForm.addEventListener('submit', (e) => ErrorTrackerModule.saveErrorModal(e));
+
+            const filterBtns = document.querySelectorAll('.tree-filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => {
+                        b.classList.remove('bg-slate-800', 'text-sky-400', 'font-semibold');
+                        b.classList.add('text-slate-400');
+                    });
+                    btn.classList.add('bg-slate-800', 'text-sky-400', 'font-semibold');
+                    FileTreeModule.currentFilter = btn.getAttribute('data-filter');
+                    FileTreeModule.renderTree();
+                });
+            });
+
+            // TCG Events
+            const tcgForm = document.getElementById('tcg-config-form');
+            if (tcgForm) {
+                tcgForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const fileId = document.getElementById('tcg-file-select')?.value;
+                    const mode = document.getElementById('tcg-mode-select')?.value;
+                    const customInstructions = document.getElementById('tcg-custom-instructions')?.value;
+                    const includeBlueprint = document.getElementById('tcg-check-blueprint')?.checked;
+                    const includePrereqs = document.getElementById('tcg-check-prereqs')?.checked;
+
+                    TCGEngineModule.generatePrompt({
+                        fileId,
+                        mode,
+                        customInstructions,
+                        includeBlueprint,
+                        includePrereqs
+                    });
+                });
+            }
+
+            const btnCopyTCG = document.getElementById('btn-copy-tcg');
+            if (btnCopyTCG) btnCopyTCG.addEventListener('click', () => TCGEngineModule.copyToClipboard());
+
+            const btnClearTCG = document.getElementById('btn-clear-tcg');
+            if (btnClearTCG) btnClearTCG.addEventListener('click', () => TCGEngineModule.clearOutput());
+
+            // Backup & Settings Events
+            const btnExport = document.getElementById('btn-export-json');
+            if (btnExport) btnExport.addEventListener('click', () => StorageEngine.exportJSON());
+
+            const btnImportTrigger = document.getElementById('btn-import-trigger');
+            const inputImport = document.getElementById('import-json-input');
+            if (btnImportTrigger && inputImport) {
+                btnImportTrigger.addEventListener('click', () => inputImport.click());
+                inputImport.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) StorageEngine.importJSON(e.target.files[0]);
+                });
+            }
+
+            const btnReset = document.getElementById('btn-reset-system');
+            if (btnReset) {
+                btnReset.addEventListener('click', () => {
+                    showConfirmModal(
+                        'Konfirmasi Reset Sistem',
+                        'Apakah Anda yakin ingin mengembalikan seluruh data LocalStorage ke pengaturan awal?',
+                        () => StorageEngine.resetData()
+                    );
+                });
+            }
+
+            console.log('%c[TCC FINAL ENTERPRISE ENGINE ACTIVE]: Full 7-Module SPA Ready.', 'color: #38bdf8; font-weight: bold;');
+        });
+    </script>
+</body>
+</html>
