@@ -1,16 +1,18 @@
 /**
  * TRISULA COMMAND CENTER (TCC) v1.2 - SPA Navigation & View Router Engine
  * File: js/navigation.js
+ * Engine: TRISULACODER v10.2
  */
 
 const NavigationController = {
-    activeTab: 'dashboard',
+    activeTab: 'flow-auditor',
     tabTitles: {
         'dashboard': { title: 'DASHBOARD / OVERVIEW', breadcrumb: 'overview' },
+        'flow-auditor': { title: 'FLOW AUDITOR (SYNC VISUAL)', breadcrumb: 'flow-auditor' },
         'architecture': { title: 'ARCHITECTURE & BLUEPRINT', breadcrumb: 'architecture' },
         'file-tree': { title: 'TASK & FILE DEPENDENCY TREE', breadcrumb: 'task-tree' },
         'tcg': { title: 'COMMAND GENERATOR (TCG ENGINE)', breadcrumb: 'cmd-generator' },
-        'code-vault': { title: 'CODE VAULT & REVISION HISTORY', breadcrumb: 'code-vault' },
+        'code-vault': { title: 'CODE VAULT & REVISION STORE', breadcrumb: 'code-vault' },
         'error-tracker': { title: 'ERROR TRACKER & RESOLUTION', breadcrumb: 'error-tracker' },
         'backup-settings': { title: 'BACKUP & SYSTEM SETTINGS', breadcrumb: 'settings' }
     },
@@ -94,7 +96,19 @@ const NavigationController = {
         if (!window.StorageEngine) return;
         const data = window.StorageEngine.getData();
 
-        if (tabId === 'architecture') {
+        if (tabId === 'flow-auditor' && window.FlowAuditorModule) {
+            window.FlowAuditorModule.render();
+        } else if (tabId === 'dashboard' && window.DashboardModule) {
+            window.DashboardModule.renderDashboard();
+        } else if (tabId === 'file-tree' && window.FileTreeModule) {
+            window.FileTreeModule.renderTree();
+        } else if (tabId === 'tcg' && window.TCGEngineModule) {
+            window.TCGEngineModule.initTCG();
+        } else if (tabId === 'code-vault' && window.CodeVaultModule) {
+            window.CodeVaultModule.renderVault();
+        } else if (tabId === 'error-tracker' && window.ErrorTrackerModule) {
+            window.ErrorTrackerModule.renderErrors();
+        } else if (tabId === 'architecture') {
             const container = document.getElementById('architecture-blueprint-content');
             if (container && data.blueprint) {
                 container.innerHTML = `
@@ -109,21 +123,6 @@ const NavigationController = {
                         <p class="text-slate-300">${data.blueprint.architectureSpecs}</p>
                     </div>
                 `;
-            }
-        } else if (tabId === 'file-tree') {
-            const tbody = document.getElementById('file-tree-table-body');
-            if (tbody && data.fileTree) {
-                tbody.innerHTML = data.fileTree.map(file => `
-                    <tr class="hover:bg-slate-800/40 transition">
-                        <td class="py-3 px-4 font-bold text-sky-400">${file.id}</td>
-                        <td class="py-3 px-4 text-white font-semibold">${file.fileName}</td>
-                        <td class="py-3 px-4 text-slate-400">${file.path}</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800/50">${file.status}</span>
-                        </td>
-                        <td class="py-3 px-4 text-slate-400">${file.prerequisites.length ? file.prerequisites.join(', ') : 'None'}</td>
-                    </tr>
-                `).join('');
             }
         }
     }
